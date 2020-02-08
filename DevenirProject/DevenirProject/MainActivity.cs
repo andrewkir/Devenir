@@ -49,7 +49,6 @@ namespace DevenirProject
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
         {
             Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
-
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
@@ -59,7 +58,25 @@ namespace DevenirProject
             FirebaseVisionTextRecognizer detector = FirebaseVision.GetInstance(app).OnDeviceTextRecognizer;
             FirebaseVisionImage image = FirebaseVisionImage.FromBitmap(bitmap);
             var result = detector
-                .ProcessImage(image);
+                .ProcessImage(image)
+                .AddOnCompleteListener(new SigninCompleteListener(text));
+        }
+
+        class SigninCompleteListener : Java.Lang.Object, IOnCompleteListener
+        {
+            TextView text;
+            public SigninCompleteListener(TextView text)
+            {
+                this.text = text;
+            }
+            public void OnComplete(Android.Gms.Tasks.Task task)
+            {
+                if (!task.IsSuccessful)
+                {
+                  
+                }
+                text.Text = ((FirebaseVisionText)task.Result).Text;
+            }
         }
 
         async void TakePhoto()
