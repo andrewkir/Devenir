@@ -13,6 +13,8 @@ using Android.Graphics;
 using Android.Gms.Tasks;
 using System;
 using Android.Util;
+using System.Collections.Generic;
+using Firebase.ML.Vision.Document;
 
 namespace DevenirProject
 {
@@ -56,8 +58,15 @@ namespace DevenirProject
         {
             var app = FirebaseApp.InitializeApp(Application.Context);
             FirebaseVisionTextRecognizer detector = FirebaseVision.GetInstance(app).OnDeviceTextRecognizer;
+
+
+            FirebaseVisionCloudDocumentRecognizerOptions options = new FirebaseVisionCloudDocumentRecognizerOptions.Builder()
+                .SetLanguageHints(new List<String>{ "en", "ru" })
+                .Build();
+            FirebaseVisionDocumentTextRecognizer det = FirebaseVision.GetInstance(app).GetCloudDocumentTextRecognizer(options);
+
             FirebaseVisionImage image = FirebaseVisionImage.FromBitmap(bitmap);
-            var result = detector
+            var result = det
                 .ProcessImage(image)
                 .AddOnCompleteListener(new SigninCompleteListener(text));
         }
@@ -75,7 +84,7 @@ namespace DevenirProject
                 {
                   
                 }
-                text.Text = ((FirebaseVisionText)task.Result).Text;
+                text.Text = ((FirebaseVisionDocumentText)task.Result).Text;
             }
         }
 
