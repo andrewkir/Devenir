@@ -1,0 +1,72 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using Android.App;
+using Android.Content;
+using Android.Gms.Tasks;
+using Android.Graphics;
+using Android.OS;
+using Android.Runtime;
+using Android.Views;
+using Android.Widget;
+using Firebase;
+using Firebase.ML.Vision;
+using Firebase.ML.Vision.Common;
+using Firebase.ML.Vision.Document;
+using Firebase.ML.Vision.Text;
+
+namespace DevenirProject.WebService
+{
+    public class FirebaseImageService
+    {
+        Context context;
+        public delegate void ImageDetectionResult(FirebaseVisionDocumentText text);
+        event ImageDetectionResult ImageDetectionEvent;
+
+        public FirebaseImageService(Context context)
+        {
+            this.context = context;
+        }
+
+        public void ProcessImage(Bitmap bitmap)
+        {
+            var app = FirebaseApp.InitializeApp(Application.Context);
+            FirebaseVisionTextRecognizer detector = FirebaseVision.GetInstance(app).OnDeviceTextRecognizer;
+
+
+            FirebaseVisionCloudDocumentRecognizerOptions options = new FirebaseVisionCloudDocumentRecognizerOptions.Builder()
+                .SetLanguageHints(new List<String> { "en", "ru" })
+                .Build();
+            FirebaseVisionDocumentTextRecognizer det = FirebaseVision.GetInstance(app).GetCloudDocumentTextRecognizer(options);
+
+            FirebaseVisionImage image = FirebaseVisionImage.FromBitmap(bitmap);
+            var result = det
+                .ProcessImage(image)
+                .AddOnCompleteListener(new SigninCompleteListener(ImageDetectionEvent));
+        }
+
+        public void AddImageResultListener(ImageDetectionResult imageDetectionResult)
+        {
+            ImageDetectionEvent += imageDetectionResult;
+        }
+
+        class SigninCompleteListener : Java.Lang.Object, IOnCompleteListener
+        {
+            ImageDetectionResult eventRes;
+            public SigninCompleteListener(ImageDetectionResult eventRes)
+            {
+                this.eventRes = eventRes;
+            }
+            public void OnComplete(Android.Gms.Tasks.Task task)
+            {
+                if (!task.IsSuccessful)
+                {
+
+                }
+                eventRes?.Invoke((FirebaseVisionDocumentText)task.Result);
+            }
+        }
+    }
+}

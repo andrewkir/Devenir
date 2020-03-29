@@ -15,14 +15,19 @@ using System;
 using Android.Util;
 using System.Collections.Generic;
 using Firebase.ML.Vision.Document;
+using System.Threading.Tasks;
+using DevenirProject.WebService;
+using DevenirProject.ImageUtils;
 
 namespace DevenirProject
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
     public class MainActivity : AppCompatActivity
     {
-        Button btn;
+        Button TakePhotoButton;
+        Button ProcessImageButton;
         ImageView imageview;
+        Bitmap photoResult;
         TextView text;
 
         readonly string[] permissions =
@@ -38,80 +43,50 @@ namespace DevenirProject
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.activity_main);
             RequestPermissions(permissions, 0);
-            btn = FindViewById<Button>(Resource.Id.button1);
+
+
+            TakePhotoButton = FindViewById<Button>(Resource.Id.TakePhotoButton);
+            ProcessImageButton = FindViewById<Button>(Resource.Id.ProcessImageButton);
+
+
             imageview = FindViewById<ImageView>(Resource.Id.imageView1);
             text = FindViewById<TextView>(Resource.Id.textView1);
 
-            btn.Click += delegate
+            TakePhotoButton.Click += delegate
             {
-                TakePhoto();
+                ImageManager imageManager = new ImageManager();
+                imageManager.AddOnImageResultListener(delegate (Bitmap bitmap) {
+                    imageview.SetImageBitmap(bitmap);
+                    photoResult = bitmap;
+                });
+                imageManager.TakePhoto();
             };
-            Log.Debug("TESTS", "HELLO THERE");
+
+            ProcessImageButton.Click += delegate
+            {
+                FirebaseImageService firebaseImageService = new FirebaseImageService(Application.Context);
+                firebaseImageService.AddImageResultListener(delegate (FirebaseVisionDocumentText text)
+                {
+                    Toast.MakeText(Application.Context, text.Text.ToString(), ToastLength.Short).Show();
+                });
+
+                if (photoResult != null)
+                {
+                    firebaseImageService.ProcessImage(photoResult);
+                } else
+                {
+                    Toast.MakeText(Application.Context, "Сначала необходимо сделать фотографию", ToastLength.Short).Show();
+                }
+            };
         }
+
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
         {
             Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
+        }   
 
-        void ProcessImage(Bitmap bitmap)
-        {
-            var app = FirebaseApp.InitializeApp(Application.Context);
-            FirebaseVisionTextRecognizer detector = FirebaseVision.GetInstance(app).OnDeviceTextRecognizer;
-
-
-            FirebaseVisionCloudDocumentRecognizerOptions options = new FirebaseVisionCloudDocumentRecognizerOptions.Builder()
-                .SetLanguageHints(new List<String>{ "en", "ru" })
-                .Build();
-            FirebaseVisionDocumentTextRecognizer det = FirebaseVision.GetInstance(app).GetCloudDocumentTextRecognizer(options);
-
-            FirebaseVisionImage image = FirebaseVisionImage.FromBitmap(bitmap);
-            var result = det
-                .ProcessImage(image)
-                .AddOnCompleteListener(new SigninCompleteListener(text));
-        }
-
-        class SigninCompleteListener : Java.Lang.Object, IOnCompleteListener
-        {
-            TextView text;
-            public SigninCompleteListener(TextView text)
-            {
-                this.text = text;
-            }
-            public void OnComplete(Android.Gms.Tasks.Task task)
-            {
-                if (!task.IsSuccessful)
-                {
-                  
-                }
-                text.Text = ((FirebaseVisionDocumentText)task.Result).Text;
-            }
-        }
-
-        async void TakePhoto()
-        {
-            await CrossMedia.Current.Initialize();
-
-            var file = await CrossMedia.Current.TakePhotoAsync(new Plugin.Media.Abstractions.StoreCameraMediaOptions
-            {
-                PhotoSize = Plugin.Media.Abstractions.PhotoSize.Medium,
-                CompressionQuality = 40,
-                Name = "myimage.jpg",
-                Directory = "sample"
-
-            });
-
-            if (file == null)
-            {
-                return;
-            }
-
-            // Convert file to byte array and set the resulting bitmap to imageview
-            byte[] imageArray = System.IO.File.ReadAllBytes(file.Path);
-            Bitmap bitmap = BitmapFactory.DecodeByteArray(imageArray, 0, imageArray.Length);
-            imageview.SetImageBitmap(bitmap);
-            ProcessImage(bitmap);
-        }
+        
 
         
     }

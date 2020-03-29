@@ -25,10 +25,15 @@
             android:layout_height="wrap_content"
             android:id="@+id/imageView1" />
         <Button
-            android:text="Button"
+            android:text="Take photo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/button1" />
+            android:id="@+id/TakePhotoButton" />
+        <Button
+            android:text="Process image"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/ProcessImageButton" />
     </LinearLayout>
 
 </ScrollView>
