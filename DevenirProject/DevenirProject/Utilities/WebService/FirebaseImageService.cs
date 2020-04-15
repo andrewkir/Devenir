@@ -22,7 +22,7 @@ namespace DevenirProject.WebService
     public class FirebaseImageService
     {
         Context context;
-        public delegate void ImageDetectionResult(FirebaseVisionDocumentText text);
+        public delegate void ImageDetectionResult(FirebaseVisionDocumentText text, Exception ex);
         event ImageDetectionResult ImageDetectionEvent;
 
         public FirebaseImageService(Context context)
@@ -44,7 +44,7 @@ namespace DevenirProject.WebService
             FirebaseVisionImage image = FirebaseVisionImage.FromBitmap(bitmap);
             var result = det
                 .ProcessImage(image)
-                .AddOnCompleteListener(new SigninCompleteListener(ImageDetectionEvent));
+                .AddOnCompleteListener(new ImageDetectionListener(ImageDetectionEvent));
         }
 
         public void AddImageResultListener(ImageDetectionResult imageDetectionResult)
@@ -52,10 +52,10 @@ namespace DevenirProject.WebService
             ImageDetectionEvent += imageDetectionResult;
         }
 
-        class SigninCompleteListener : Java.Lang.Object, IOnCompleteListener
+        class ImageDetectionListener : Java.Lang.Object, IOnCompleteListener
         {
             ImageDetectionResult eventRes;
-            public SigninCompleteListener(ImageDetectionResult eventRes)
+            public ImageDetectionListener(ImageDetectionResult eventRes)
             {
                 this.eventRes = eventRes;
             }
@@ -63,9 +63,9 @@ namespace DevenirProject.WebService
             {
                 if (!task.IsSuccessful)
                 {
-
+                    eventRes?.Invoke(null, task.Exception);
                 }
-                eventRes?.Invoke((FirebaseVisionDocumentText)task.Result);
+                else eventRes?.Invoke((FirebaseVisionDocumentText)task.Result, null);
             }
         }
     }

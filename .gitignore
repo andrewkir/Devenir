@@ -351,3 +351,5 @@ MigrationBackup/
 
 # Android
 google-services.json
+secrets.xml
+

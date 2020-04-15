@@ -18,6 +18,11 @@ using Firebase.ML.Vision.Document;
 using System.Threading.Tasks;
 using DevenirProject.WebService;
 using DevenirProject.ImageUtils;
+using DevenirProject.Utilities.API;
+using Refit;
+using Org.Json;
+using Android.Gms.Common;
+using Android.Gms.SafetyNet;
 
 namespace DevenirProject
 {
@@ -26,9 +31,14 @@ namespace DevenirProject
     {
         Button TakePhotoButton;
         Button ProcessImageButton;
+        Button PickImageButton;
         ImageView imageview;
         Bitmap photoResult;
         TextView text;
+
+        FirebaseImageService firebaseImageService = new FirebaseImageService(Application.Context);
+        ImageManager imageManager = new ImageManager();
+        LatexService latexService = new LatexService();
 
         readonly string[] permissions =
         {
@@ -47,47 +57,83 @@ namespace DevenirProject
 
             TakePhotoButton = FindViewById<Button>(Resource.Id.TakePhotoButton);
             ProcessImageButton = FindViewById<Button>(Resource.Id.ProcessImageButton);
-
+            PickImageButton = FindViewById<Button>(Resource.Id.PickImageButton);
 
             imageview = FindViewById<ImageView>(Resource.Id.imageView1);
             text = FindViewById<TextView>(Resource.Id.textView1);
 
-            TakePhotoButton.Click += delegate
+
+            imageManager.AddOnImageResultListener(delegate (Bitmap bitmap, Exception ex)
             {
-                ImageManager imageManager = new ImageManager();
-                imageManager.AddOnImageResultListener(delegate (Bitmap bitmap) {
+                if (ex == null)
+                {
                     imageview.SetImageBitmap(bitmap);
                     photoResult = bitmap;
-                });
+                }
+                else Toast.MakeText(Application.Context, ex.Message, ToastLength.Short).Show();
+            });
+
+            firebaseImageService.AddImageResultListener(delegate (FirebaseVisionDocumentText text, Exception ex)
+            {
+                if (ex == null) Toast.MakeText(Application.Context, text.Text.ToString(), ToastLength.Short).Show();
+                else Toast.MakeText(Application.Context, ex.Message, ToastLength.Short).Show();
+            });
+
+
+            latexService.AddOnLatexResultListener(delegate (string res, string ex)
+            {
+                if (res != null)
+                {
+                    var jsonRes = new JSONObject(res);
+                    Toast.MakeText(Application.Context, jsonRes.ToString(), ToastLength.Long).Show();
+                    Toast.MakeText(Application.Context, jsonRes.Get("latex_styled").ToString(), ToastLength.Long).Show();
+                }
+                else Toast.MakeText(Application.Context, ex, ToastLength.Long).Show();
+            });
+
+
+
+
+            TakePhotoButton.Click += delegate
+            {
                 imageManager.TakePhoto();
+            };
+
+            PickImageButton.Click += delegate
+            {
+                imageManager.PickPhoto();
             };
 
             ProcessImageButton.Click += delegate
             {
-                FirebaseImageService firebaseImageService = new FirebaseImageService(Application.Context);
-                firebaseImageService.AddImageResultListener(delegate (FirebaseVisionDocumentText text)
-                {
-                    Toast.MakeText(Application.Context, text.Text.ToString(), ToastLength.Short).Show();
-                });
-
                 if (photoResult != null)
                 {
                     firebaseImageService.ProcessImage(photoResult);
-                } else
+
+                    using (var ms = new System.IO.MemoryStream())
+                    {
+                        photoResult.Compress(Bitmap.CompressFormat.Jpeg, 0, ms);
+                        var res = Base64.EncodeToString(ms.ToArray(), Base64Flags.Default);
+                        latexService.ProcessImageAsync("data:image/jpeg;base64," + res, this);
+                    }
+                }
+                else
                 {
                     Toast.MakeText(Application.Context, "Сначала необходимо сделать фотографию", ToastLength.Short).Show();
                 }
             };
+
+            ApiAttestation.Attestate(this);
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
         {
             Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
-        }   
+        }
 
-        
 
-        
+
+
     }
 }
