@@ -13,26 +13,80 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
+using Org.Json;
+using Refit;
+using static Android.Provider.Settings;
 
 namespace DevenirProject.Utilities.API
 {
-    static class ApiAttestation {
-        public static void Attestate(Activity activity)
+    class ApiAttestation
+    {
+
+        public delegate void ReturnJwt(string res);
+        public event ReturnJwt ReturnJwtEvent;
+
+        string timestamp;
+        string device_id;
+
+        public async System.Threading.Tasks.Task AttestateAsync(Activity activity)
         {
-            if (GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(Application.Context) == ConnectionResult.Success)
+            
+            
+            var api = RestService.For<APIService>("https://devenir.andrewkir.ru");
+            JSONObject obj = new JSONObject();
+
+            timestamp = DateTime.Now.Ticks.ToString();
+            device_id = Secure.GetString(activity.ContentResolver, Secure.AndroidId);
+
+            obj.Put("timestamp", timestamp);
+            obj.Put("device_id", device_id);
+
+
+            var response = await api.GetNonce(obj.ToString());
+
+            if (response.IsSuccessStatusCode)
             {
-                // The SafetyNet Attestation API is available.
-                Toast.MakeText(Application.Context, "Yep, all right", ToastLength.Short).Show();
-                SafetyNetClient client = SafetyNetClass.GetClient(activity);
-                var task = client.Attest(new byte[] { 0, 1, 2 }, activity.Resources.GetString(Resource.String.api_safetyNetKey))
-                                 .AddOnSuccessListener(activity, new OnSuccessListener(activity))
-                                 .AddOnFailureListener(activity, new OnFailureListener(activity));
-            }
-            else
+                string nonce = response.Content;
+
+                if (GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(Application.Context) == ConnectionResult.Success)
+                {
+                    // The SafetyNet Attestation API is available.
+                    SafetyNetClient client = SafetyNetClass.GetClient(activity);
+                    var task = client.Attest(Encoding.ASCII.GetBytes(nonce), activity.Resources.GetString(Resource.String.api_safetyNetKey))
+                                     .AddOnSuccessListener(activity, new OnSuccessListener(activity, ReturnJwtEvent, timestamp))
+                                     .AddOnFailureListener(activity, new OnFailureListener(activity));
+                }
+                else
+                {
+                    // Prompt user to update Google Play services.
+                    Toast.MakeText(Application.Context, "You need to update your Google Play services!", ToastLength.Short).Show();
+                }
+                return;
+            } else
             {
-                // Prompt user to update Google Play services.
+                Toast.MakeText(activity, response.Error.Content, ToastLength.Long).Show();
+                return;
             }
         }
+
+        private static async System.Threading.Tasks.Task CheckResultsAsync(string res, string timestamp, Activity activity)
+        {
+            var api = RestService.For<APIService>("https://devenir.andrewkir.ru");
+            JSONObject obj = new JSONObject();
+            obj.Put("safetynet", res);
+            obj.Put("timestamp", timestamp);
+            obj.Put("device_id", Secure.GetString(activity.ContentResolver, Secure.AndroidId));
+
+            var response = await api.CreateAccessToken(obj.ToString());
+            if (response.IsSuccessStatusCode)
+            {
+                Toast.MakeText(Application.Context, "Successful response " + response.Content.ToString(), ToastLength.Long).Show();
+            }
+            else
+                Toast.MakeText(Application.Context, $"Error response {response.Content.ToString()}", ToastLength.Long).Show();
+        }
+
+
         public class OnFailureListener : Java.Lang.Object, IOnFailureListener
         {
             Activity activity;
@@ -40,19 +94,29 @@ namespace DevenirProject.Utilities.API
 
             public void OnFailure(Java.Lang.Exception e)
             {
-                Toast.MakeText(activity, $"Nah! {e.Message}", ToastLength.Long).Show();
+                Toast.MakeText(activity, $"Во время проверки приложения возникла ошибка", ToastLength.Long).Show();
             }
         }
 
         public class OnSuccessListener : Java.Lang.Object, IOnSuccessListener
         {
             Activity activity;
-            public OnSuccessListener(Activity activity) { this.activity = activity; }
+            ReturnJwt returnJwtevent;
+            string timestamp;
+
+            public OnSuccessListener(Activity activity, ReturnJwt returnJwt, string timestamp)
+            {
+                this.activity = activity;
+                this.returnJwtevent = returnJwt;
+                this.timestamp = timestamp;
+            }
 
             public void OnSuccess(Java.Lang.Object result)
             {
                 var res = (result as SafetyNetApiAttestationResponse).JwsResult.ToString();
-                Toast.MakeText(activity, $"Yesss! {res}", ToastLength.Long).Show();
+
+                returnJwtevent?.Invoke($"{res} {timestamp} {Secure.GetString(activity.ContentResolver, Secure.AndroidId)}");
+                CheckResultsAsync(res, timestamp, activity);
             }
         }
     }

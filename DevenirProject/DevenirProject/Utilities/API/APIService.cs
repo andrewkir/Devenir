@@ -20,5 +20,13 @@ namespace DevenirProject.Utilities.API
         [Post("/v3/text")]
         [Headers("Content-Type: application/json")]
         Task<ApiResponse<string>> GetImageProcess([Body]string src, [Header("app_key")] string appKey, [Header("app_id")] string appId);
+
+        [Post("/createtoken")]
+        [Headers("Content-Type: application/json")]
+        Task<ApiResponse<string>> CreateAccessToken([Body]string body);
+
+        [Post("/getnonce")]
+        [Headers("Content-Type: application/json")]
+        Task<ApiResponse<string>> GetNonce([Body]string body);
     }
 }

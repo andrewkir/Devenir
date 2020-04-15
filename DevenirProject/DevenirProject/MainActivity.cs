@@ -106,24 +106,33 @@ namespace DevenirProject
 
             ProcessImageButton.Click += delegate
             {
-                if (photoResult != null)
-                {
-                    firebaseImageService.ProcessImage(photoResult);
 
-                    using (var ms = new System.IO.MemoryStream())
-                    {
-                        photoResult.Compress(Bitmap.CompressFormat.Jpeg, 0, ms);
-                        var res = Base64.EncodeToString(ms.ToArray(), Base64Flags.Default);
-                        latexService.ProcessImageAsync("data:image/jpeg;base64," + res, this);
-                    }
-                }
-                else
+                var attest = new ApiAttestation();
+                attest.ReturnJwtEvent += delegate (string res)
                 {
-                    Toast.MakeText(Application.Context, "Сначала необходимо сделать фотографию", ToastLength.Short).Show();
+                    FindViewById<EditText>(Resource.Id.textInputEditText1).Text = res;
+                };
+                attest.AttestateAsync(this);
+                if (false)
+                {
+                    if (photoResult != null)
+                    {
+                        firebaseImageService.ProcessImage(photoResult);
+
+                        using (var ms = new System.IO.MemoryStream())
+                        {
+                            photoResult.Compress(Bitmap.CompressFormat.Jpeg, 0, ms);
+                            var res = Base64.EncodeToString(ms.ToArray(), Base64Flags.Default);
+                            latexService.ProcessImageAsync("data:image/jpeg;base64," + res, this);
+                        }
+                    }
+                    else
+                    {
+                        Toast.MakeText(Application.Context, "Сначала необходимо сделать фотографию", ToastLength.Short).Show();
+                    }
                 }
             };
 
-            ApiAttestation.Attestate(this);
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
