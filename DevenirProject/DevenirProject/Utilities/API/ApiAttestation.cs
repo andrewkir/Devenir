@@ -51,7 +51,8 @@ namespace DevenirProject.Utilities.API
 
             public void OnSuccess(Java.Lang.Object result)
             {
-                Toast.MakeText(activity, "Yesss!", ToastLength.Long).Show();
+                var res = (result as SafetyNetApiAttestationResponse).JwsResult.ToString();
+                Toast.MakeText(activity, $"Yesss! {res}", ToastLength.Long).Show();
             }
         }
     }
