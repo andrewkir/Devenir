@@ -17,9 +17,9 @@ namespace DevenirProject.Utilities.API
 {
     public interface APIService
     {
-        [Post("/v3/text")]
+        [Post("/latex")]
         [Headers("Content-Type: application/json")]
-        Task<ApiResponse<string>> GetImageProcess([Body]string src, [Header("app_key")] string appKey, [Header("app_id")] string appId);
+        Task<ApiResponse<string>> GetImageProcess([Body]string src, [Header("Authorization")] string access_token, [Header("Device-id")] string deviceId);
 
         [Post("/createtoken")]
         [Headers("Content-Type: application/json")]
@@ -28,5 +28,9 @@ namespace DevenirProject.Utilities.API
         [Post("/getnonce")]
         [Headers("Content-Type: application/json")]
         Task<ApiResponse<string>> GetNonce([Body]string body);
+
+        [Post("/refresh")]
+        [Headers("Content-Type: application/json")]
+        Task<ApiResponse<string>> RefreshToken([Header("Authorization")] string refresh_token, [Header("Device-id")] string deviceId);
     }
 }

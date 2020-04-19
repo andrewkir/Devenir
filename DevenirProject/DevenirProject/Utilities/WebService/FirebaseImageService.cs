@@ -22,7 +22,7 @@ namespace DevenirProject.WebService
     public class FirebaseImageService
     {
         Context context;
-        public delegate void ImageDetectionResult(FirebaseVisionDocumentText text, Exception ex);
+        public delegate void ImageDetectionResult(FirebaseVisionDocumentText text, string ex);
         event ImageDetectionResult ImageDetectionEvent;
 
         public FirebaseImageService(Context context)
@@ -32,19 +32,26 @@ namespace DevenirProject.WebService
 
         public void ProcessImage(Bitmap bitmap)
         {
-            var app = FirebaseApp.InitializeApp(Application.Context);
-            FirebaseVisionTextRecognizer detector = FirebaseVision.GetInstance(app).OnDeviceTextRecognizer;
+            try
+            {
+                var app = FirebaseApp.InitializeApp(Application.Context);
+                FirebaseVisionTextRecognizer detector = FirebaseVision.GetInstance(app).OnDeviceTextRecognizer;
 
 
-            FirebaseVisionCloudDocumentRecognizerOptions options = new FirebaseVisionCloudDocumentRecognizerOptions.Builder()
-                .SetLanguageHints(new List<String> { "en", "ru" })
-                .Build();
-            FirebaseVisionDocumentTextRecognizer det = FirebaseVision.GetInstance(app).GetCloudDocumentTextRecognizer(options);
+                FirebaseVisionCloudDocumentRecognizerOptions options = new FirebaseVisionCloudDocumentRecognizerOptions.Builder()
+                    .SetLanguageHints(new List<String> { "en", "ru" })
+                    .Build();
+                FirebaseVisionDocumentTextRecognizer det = FirebaseVision.GetInstance(app).GetCloudDocumentTextRecognizer(options);
 
-            FirebaseVisionImage image = FirebaseVisionImage.FromBitmap(bitmap);
-            var result = det
-                .ProcessImage(image)
-                .AddOnCompleteListener(new ImageDetectionListener(ImageDetectionEvent));
+                FirebaseVisionImage image = FirebaseVisionImage.FromBitmap(bitmap);
+                var result = det
+                    .ProcessImage(image)
+                    .AddOnCompleteListener(new ImageDetectionListener(ImageDetectionEvent));
+            }
+            catch (Exception)
+            {
+                ImageDetectionEvent?.Invoke(null, "Произошла непредвиденная ошибка");
+            }
         }
 
         public void AddImageResultListener(ImageDetectionResult imageDetectionResult)
@@ -63,7 +70,7 @@ namespace DevenirProject.WebService
             {
                 if (!task.IsSuccessful)
                 {
-                    eventRes?.Invoke(null, task.Exception);
+                    eventRes?.Invoke(null, "Ошибка во время обработки изображения");
                 }
                 else eventRes?.Invoke((FirebaseVisionDocumentText)task.Result, null);
             }

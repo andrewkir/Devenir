@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 
 using Android.App;
@@ -22,101 +23,160 @@ namespace DevenirProject.Utilities.API
     class ApiAttestation
     {
 
-        public delegate void ReturnJwt(string res);
-        public event ReturnJwt ReturnJwtEvent;
-
         string timestamp;
         string device_id;
 
+        public delegate void AttestationResult(bool res);
+        event AttestationResult AttestationResultEvent;
+
         public async System.Threading.Tasks.Task AttestateAsync(Activity activity)
         {
-            
-            
-            var api = RestService.For<APIService>("https://devenir.andrewkir.ru");
-            JSONObject obj = new JSONObject();
-
-            timestamp = DateTime.Now.Ticks.ToString();
-            device_id = Secure.GetString(activity.ContentResolver, Secure.AndroidId);
-
-            obj.Put("timestamp", timestamp);
-            obj.Put("device_id", device_id);
-
-
-            var response = await api.GetNonce(obj.ToString());
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                string nonce = response.Content;
+                var api = RestService.For<APIService>("https://devenir.andrewkir.ru");
+                JSONObject obj = new JSONObject();
 
-                if (GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(Application.Context) == ConnectionResult.Success)
+                timestamp = DateTime.Now.Ticks.ToString();
+                device_id = Secure.GetString(activity.ContentResolver, Secure.AndroidId);
+
+                obj.Put("timestamp", timestamp);
+                obj.Put("device_id", device_id);
+
+
+                var response = await api.GetNonce(obj.ToString());
+                if (response == null)
                 {
-                    // The SafetyNet Attestation API is available.
-                    SafetyNetClient client = SafetyNetClass.GetClient(activity);
-                    var task = client.Attest(Encoding.ASCII.GetBytes(nonce), activity.Resources.GetString(Resource.String.api_safetyNetKey))
-                                     .AddOnSuccessListener(activity, new OnSuccessListener(activity, ReturnJwtEvent, timestamp))
-                                     .AddOnFailureListener(activity, new OnFailureListener(activity));
+                    Toast.MakeText(Application.Context, "Отсутствует подключение к интернету!", ToastLength.Short).Show();
+                    return;
+                }
+
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string nonce = response.Content;
+
+                    if (GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(Application.Context) == ConnectionResult.Success)
+                    {
+                        // The SafetyNet Attestation API is available.
+                        SafetyNetClient client = SafetyNetClass.GetClient(activity);
+                        var task = client.Attest(Encoding.ASCII.GetBytes(nonce), activity.Resources.GetString(Resource.String.api_safetyNetKey))
+                                         .AddOnSuccessListener(activity, new OnSuccessListener(activity, timestamp, this))
+                                         .AddOnFailureListener(activity, new OnFailureListener(this));
+                    }
+                    else
+                    {
+                        // Prompt user to update Google Play services.
+                        Toast.MakeText(Application.Context, "Вы должны обновить Google Play сервисы!", ToastLength.Short).Show();
+                        AttestationResultEvent?.Invoke(false);
+                    }
+                    return;
                 }
                 else
                 {
-                    // Prompt user to update Google Play services.
-                    Toast.MakeText(Application.Context, "You need to update your Google Play services!", ToastLength.Short).Show();
+                    Toast.MakeText(activity, "att " + response.Error.Content, ToastLength.Long).Show();
+                    AttestationResultEvent?.Invoke(false);
+                    return;
                 }
-                return;
-            } else
+            }
+            catch (HttpRequestException)
             {
-                Toast.MakeText(activity, response.Error.Content, ToastLength.Long).Show();
-                return;
+                Toast.MakeText(Application.Context, $"Отсутствует подключение к сервису", ToastLength.Short).Show();
+                AttestationResultEvent?.Invoke(false);
+            }
+            catch (Exception ex)
+            {
+                Toast.MakeText(Application.Context, $"Произошла непредвиденная ошибка " + ex.Message, ToastLength.Short).Show();
+                AttestationResultEvent?.Invoke(false);
             }
         }
 
-        private static async System.Threading.Tasks.Task CheckResultsAsync(string res, string timestamp, Activity activity)
+        public void AddOnResultListener(AttestationResult result)
         {
-            var api = RestService.For<APIService>("https://devenir.andrewkir.ru");
-            JSONObject obj = new JSONObject();
-            obj.Put("safetynet", res);
-            obj.Put("timestamp", timestamp);
-            obj.Put("device_id", Secure.GetString(activity.ContentResolver, Secure.AndroidId));
+            if (result != null) AttestationResultEvent += result;
+        }
 
-            var response = await api.CreateAccessToken(obj.ToString());
-            if (response.IsSuccessStatusCode)
+        private async System.Threading.Tasks.Task CheckResultsAsync(string res, string timestamp, Activity activity)
+        {
+            try
             {
-                Toast.MakeText(Application.Context, "Successful response " + response.Content.ToString(), ToastLength.Long).Show();
+                var api = RestService.For<APIService>("https://devenir.andrewkir.ru");
+                JSONObject obj = new JSONObject();
+                obj.Put("safetynet", res);
+                obj.Put("timestamp", timestamp);
+                obj.Put("device_id", Secure.GetString(activity.ContentResolver, Secure.AndroidId));
+
+                var response = await api.CreateAccessToken(obj.ToString());
+                if (response == null)
+                {
+                    Toast.MakeText(Application.Context, "Отсутствует подключение к интернету!", ToastLength.Short).Show();
+                    return;
+                }
+                if (response.IsSuccessStatusCode)
+                {
+                    JSONObject resp = new JSONObject(response.Content);
+                    try
+                    {
+                        string access_token = resp.GetString("access_token");
+                        string refrest_token = resp.GetString("refresh_token");
+                        SharedPrefsManager.SaveTokens(access_token, refrest_token);
+                        AttestationResultEvent?.Invoke(true);
+                        Toast.MakeText(Application.Context, "Attestated", ToastLength.Short).Show();
+                    }
+                    catch (JSONException)
+                    {
+                        Toast.MakeText(Application.Context, "Ошибка сервера! Попробуйте повторить позже", ToastLength.Short).Show();
+                        AttestationResultEvent?.Invoke(false);
+                    }
+                }
+                else
+                {
+                    Toast.MakeText(Application.Context, $"Error response {response.Content.ToString()}", ToastLength.Long).Show();
+                    AttestationResultEvent?.Invoke(false);
+                }
             }
-            else
-                Toast.MakeText(Application.Context, $"Error response {response.Content.ToString()}", ToastLength.Long).Show();
+            catch (HttpRequestException)
+            {
+                Toast.MakeText(Application.Context, $"Отсутствует подключение к сервису", ToastLength.Short).Show();
+                AttestationResultEvent?.Invoke(false);
+            }
+            catch (Exception ex)
+            {
+                Toast.MakeText(Application.Context, $"Произошла непредвиденная ошибка " + ex.Message, ToastLength.Short).Show();
+                AttestationResultEvent?.Invoke(false);
+            }
         }
 
 
         public class OnFailureListener : Java.Lang.Object, IOnFailureListener
         {
-            Activity activity;
-            public OnFailureListener(Activity activity) { this.activity = activity; }
+            ApiAttestation sender;
+            public OnFailureListener(ApiAttestation sender) { this.sender = sender; }
 
             public void OnFailure(Java.Lang.Exception e)
             {
-                Toast.MakeText(activity, $"Во время проверки приложения возникла ошибка", ToastLength.Long).Show();
+                sender.AttestationResultEvent?.Invoke(false);
+                Toast.MakeText(Application.Context, $"Во время проверки приложения возникла ошибка", ToastLength.Long).Show();
             }
         }
 
         public class OnSuccessListener : Java.Lang.Object, IOnSuccessListener
         {
             Activity activity;
-            ReturnJwt returnJwtevent;
             string timestamp;
+            ApiAttestation sender;
 
-            public OnSuccessListener(Activity activity, ReturnJwt returnJwt, string timestamp)
+            public OnSuccessListener(Activity activity, string timestamp, ApiAttestation sender)
             {
                 this.activity = activity;
-                this.returnJwtevent = returnJwt;
                 this.timestamp = timestamp;
+                this.sender = sender;
             }
 
             public void OnSuccess(Java.Lang.Object result)
             {
                 var res = (result as SafetyNetApiAttestationResponse).JwsResult.ToString();
-
-                returnJwtevent?.Invoke($"{res} {timestamp} {Secure.GetString(activity.ContentResolver, Secure.AndroidId)}");
-                CheckResultsAsync(res, timestamp, activity);
+                System.Threading.Tasks.Task task = new System.Threading.Tasks.Task(() => sender.CheckResultsAsync(res, timestamp, activity).RunSynchronously());
+                task.RunSynchronously();
             }
         }
     }
