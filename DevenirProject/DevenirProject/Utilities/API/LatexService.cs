@@ -7,17 +7,19 @@ using Android.App;
 using Android.Content;
 using Android.OS;
 using Android.Runtime;
+using Android.Util;
 using Android.Views;
 using Android.Widget;
 using Org.Json;
 using Refit;
+using Android.Graphics;
+using DevenirProject.Utilities.Utils;
 
 namespace DevenirProject.Utilities.API
 {
-    class LatexService
+    class LatexService : ImageProcessingBaseClass
     {
-        public delegate void LatexResult(string result, string ex);
-        event LatexResult LatexResultEvent;
+        event ImageProcessing LatexResultEvent;
         Activity activity;
         string image;
 
@@ -26,12 +28,17 @@ namespace DevenirProject.Utilities.API
             this.activity = activity;
         }
 
-        public void ProcessImageAsync(string image)
+        public override void ProcessImage(Bitmap image)
         {
-            this.image = image;
 
+            using (var ms = new System.IO.MemoryStream())
+            {
+                image.Compress(Bitmap.CompressFormat.Jpeg, 0, ms);
+                var res = Base64.EncodeToString(ms.ToArray(), Base64Flags.Default);
+                this.image = "data:image/jpeg;base64," + res;
+            }
             JSONObject obj = new JSONObject();
-            obj.Put("src", image);
+            obj.Put("src", this.image);
 
             var api = new ApiImplementation();
             api.AddOnRequestResultListener(ResultListener);
@@ -52,7 +59,7 @@ namespace DevenirProject.Utilities.API
             else
             {
                 JSONObject obj = new JSONObject();
-                obj.Put("src", image);
+                obj.Put("src", this.image);
 
                 var api = new ApiImplementation();
                 api.AddOnRequestResultListener(FinalResultListener);
@@ -71,9 +78,13 @@ namespace DevenirProject.Utilities.API
                 else
                     LatexResultEvent?.Invoke(null, response.Error.Content.ToString());
             }
+            else
+            {
+                LatexResultEvent?.Invoke(null,"Отсутствует подключение к сервису");
+            }
         }
 
-        public void AddOnLatexResultListener(LatexResult latexResult)
+        public void AddOnLatexResultListener(ImageProcessing latexResult)
         {
             LatexResultEvent += latexResult;
         }

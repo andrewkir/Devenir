@@ -35,7 +35,7 @@ namespace DevenirProject.Utilities.API
                 ApiResponse<string> response = null;
                 var api = RestService.For<APIService>(PATH);
                 string access_token = SharedPrefsManager.GetTokens().access_token;
-                Toast.MakeText(Application.Context, $"Токен = {access_token}", ToastLength.Short).Show();
+                Toast.MakeText(Application.Context, $"Токен не пустой? {access_token == ""}", ToastLength.Short).Show();
                 if (access_token != null && access_token != "")
                 {
                     Toast.MakeText(Application.Context, access_token, ToastLength.Short);
@@ -121,6 +121,10 @@ namespace DevenirProject.Utilities.API
                 {
                     Toast.MakeText(Application.Context, "Переаттестация! Пустой refresh token", ToastLength.Short).Show();
                     var attest = new ApiAttestation();
+                    attest.AddOnResultListener(delegate (bool res)
+                    {
+                        if (res) RequestResultEvent?.Invoke(res, null);
+                    });
                     await attest.AttestateAsync(activity);
                 }
             }

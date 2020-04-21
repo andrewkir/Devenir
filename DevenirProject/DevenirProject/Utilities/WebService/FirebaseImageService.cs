@@ -11,6 +11,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
+using DevenirProject.Utilities.Utils;
 using Firebase;
 using Firebase.ML.Vision;
 using Firebase.ML.Vision.Common;
@@ -19,18 +20,11 @@ using Firebase.ML.Vision.Text;
 
 namespace DevenirProject.WebService
 {
-    public class FirebaseImageService
+    public class FirebaseImageService : ImageProcessingBaseClass
     {
-        Context context;
-        public delegate void ImageDetectionResult(FirebaseVisionDocumentText text, string ex);
-        event ImageDetectionResult ImageDetectionEvent;
+        event ImageProcessing ImageDetectionEvent;
 
-        public FirebaseImageService(Context context)
-        {
-            this.context = context;
-        }
-
-        public void ProcessImage(Bitmap bitmap)
+        public override void ProcessImage(Bitmap bitmap)
         {
             try
             {
@@ -54,15 +48,15 @@ namespace DevenirProject.WebService
             }
         }
 
-        public void AddImageResultListener(ImageDetectionResult imageDetectionResult)
+        public void AddImageResultListener(ImageProcessing imageDetectionResult)
         {
             ImageDetectionEvent += imageDetectionResult;
         }
 
         class ImageDetectionListener : Java.Lang.Object, IOnCompleteListener
         {
-            ImageDetectionResult eventRes;
-            public ImageDetectionListener(ImageDetectionResult eventRes)
+            ImageProcessing eventRes;
+            public ImageDetectionListener(ImageProcessing eventRes)
             {
                 this.eventRes = eventRes;
             }
@@ -72,7 +66,7 @@ namespace DevenirProject.WebService
                 {
                     eventRes?.Invoke(null, "Ошибка во время обработки изображения");
                 }
-                else eventRes?.Invoke((FirebaseVisionDocumentText)task.Result, null);
+                else eventRes?.Invoke(((FirebaseVisionDocumentText)task.Result).Text, null);
             }
         }
     }

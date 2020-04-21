@@ -39,7 +39,7 @@ namespace DevenirProject
         TextView text;
         SwipeRefreshLayout swipeLayout;
 
-        FirebaseImageService firebaseImageService = new FirebaseImageService(Application.Context);
+        FirebaseImageService firebaseImageService = new FirebaseImageService();
         ImageManager imageManager = new ImageManager();
         LatexService latexService;
 
@@ -81,9 +81,9 @@ namespace DevenirProject
                 else Toast.MakeText(Application.Context, ex.Message, ToastLength.Short).Show();
             });
 
-            firebaseImageService.AddImageResultListener(delegate (FirebaseVisionDocumentText text, string ex)
+            firebaseImageService.AddImageResultListener(delegate (string text, string ex)
             {
-                if (ex == null) Toast.MakeText(Application.Context, text.Text.ToString(), ToastLength.Short).Show();
+                if (ex == null) Toast.MakeText(Application.Context, text, ToastLength.Short).Show();
                 else Toast.MakeText(Application.Context, ex, ToastLength.Short).Show();
             });
 
@@ -124,13 +124,7 @@ namespace DevenirProject
                 {
                     swipeLayout.Refreshing = true;
                     firebaseImageService.ProcessImage(photoResult);
-
-                    using (var ms = new System.IO.MemoryStream())
-                    {
-                        photoResult.Compress(Bitmap.CompressFormat.Jpeg, 0, ms);
-                        var res = Base64.EncodeToString(ms.ToArray(), Base64Flags.Default);
-                        latexService.ProcessImageAsync("data:image/jpeg;base64," + res);
-                    }
+                    latexService.ProcessImage(photoResult);
                 }
                 else
                 {
