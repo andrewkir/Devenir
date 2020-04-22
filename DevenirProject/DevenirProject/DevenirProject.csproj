@@ -17,7 +17,6 @@
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <AndroidResgenClass>Resource</AndroidResgenClass>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <TargetFrameworkVersion>v10.0</TargetFrameworkVersion>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
@@ -76,7 +75,7 @@
     <Compile Include="Utilities\Utils\ImageProcessingBaseClass.cs" />
     <Compile Include="Utilities\Utils\SharedPrefsManager.cs" />
     <Compile Include="Utilities\WebService\FirebaseImageService.cs" />
-    <Compile Include="Views\MultiCropView.cs" />
+    <Compile Include="Views\MultiPointCropView.cs" />
     <Compile Include="Views\Point.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -56,9 +56,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/textInputEditText1" />
-            <DevenirProject.Views.MultiCropView
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
+            <DevenirProject.Views.MultiPointCropView
+                android:layout_width="300dp"
+                android:layout_height="300dp"/>
         </LinearLayout>
     </ScrollView>
 </android.support.v4.widget.SwipeRefreshLayout>

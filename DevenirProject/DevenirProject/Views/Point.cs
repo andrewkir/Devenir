@@ -16,8 +16,17 @@ namespace DevenirProject.Views
 {
     public class Point : View
     {
-        int pointRadius;
-        int ringRadius;
+        public int pointRadius;
+        public int ringRadius;
+
+        public float pointdX;
+        public float pointdY; 
+        
+        public float pointX;
+        public float pointY;
+
+
+        public float radius;
 
         Paint circlePaint = new Paint(PaintFlags.AntiAlias);
         RectF circleRect = new RectF();
@@ -43,13 +52,15 @@ namespace DevenirProject.Views
                 //array.Recycle();
 
 
+
                 ringPaint.Color = array.GetColor(Resource.Styleable.Point_ringColor, Color.Red);
                 ringPaint.SetStyle(Paint.Style.Stroke);
                 ringRadius = array.GetDimensionPixelSize(Resource.Styleable.Point_ringRadius, 0);
                 ringThickness = array.GetDimensionPixelSize(Resource.Styleable.Point_ringThickness, 0);
 
-
                 ringPaint.StrokeWidth = ringThickness;
+
+                radius = ringRadius + ringThickness;
             }
         }
 
@@ -72,5 +83,7 @@ namespace DevenirProject.Views
             canvas.DrawCircle(ringRadius + ringThickness, ringRadius + ringThickness, ringRadius, ringPaint);
             base.DispatchDraw(canvas);
         }
+
+        
     }
 }
