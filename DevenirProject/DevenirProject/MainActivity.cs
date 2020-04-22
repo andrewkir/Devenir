@@ -55,7 +55,8 @@ namespace DevenirProject
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.activity_main);
-            RequestPermissions(permissions, 0);
+
+            if (Build.VERSION.SdkInt > Build.VERSION_CODES.LollipopMr1) RequestPermissions(permissions, 0);
 
             latexService = new LatexService(this);
 
@@ -84,7 +85,8 @@ namespace DevenirProject
             firebaseImageService.AddImageResultListener(delegate (string text, string ex)
             {
                 if (ex == null) Toast.MakeText(Application.Context, text, ToastLength.Short).Show();
-                else Toast.MakeText(Application.Context, ex, ToastLength.Short).Show();
+                else if (text != null) Toast.MakeText(Application.Context, ex, ToastLength.Short).Show();
+                else Toast.MakeText(Application.Context, "null", ToastLength.Short).Show();
             });
 
 
@@ -94,7 +96,7 @@ namespace DevenirProject
                 if (res != null)
                 {
                     var jsonRes = new JSONObject(res);
-                    FindViewById<EditText>(Resource.Id.textInputEditText1).Text = jsonRes.Get("latex_styled").ToString();
+                    if (jsonRes.Has("latex_styled")) FindViewById<EditText>(Resource.Id.textInputEditText1).Text = jsonRes.Get("latex_styled").ToString();
                 }
                 else Toast.MakeText(Application.Context, ex, ToastLength.Long).Show();
             });

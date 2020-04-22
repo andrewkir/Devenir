@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+  <dimen name="pointRadius">8dp</dimen>
+
+  <dimen name="ringRadius">15dp</dimen>
+  <dimen name="ringThickness">3dp</dimen>
+</resources>

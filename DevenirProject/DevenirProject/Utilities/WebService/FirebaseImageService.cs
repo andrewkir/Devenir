@@ -66,7 +66,8 @@ namespace DevenirProject.WebService
                 {
                     eventRes?.Invoke(null, "Ошибка во время обработки изображения");
                 }
-                else eventRes?.Invoke(((FirebaseVisionDocumentText)task.Result).Text, null);
+                if (task.Result != null && ((FirebaseVisionDocumentText)task.Result).Text != null) eventRes?.Invoke(((FirebaseVisionDocumentText)task.Result).Text, null);
+                else eventRes?.Invoke(null, null);
             }
         }
     }

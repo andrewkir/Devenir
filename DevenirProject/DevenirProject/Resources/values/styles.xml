@@ -6,6 +6,16 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+
+      <item name="pointViewStyle">@style/Point</item>
     </style>
+
+  <style name="Point">
+    <item name="color">@color/PointViewColor</item>
+    <item name="pointRadius">@dimen/pointRadius</item>
+    <item name="ringRadius">@dimen/ringRadius</item>
+    <item name="ringThickness">@dimen/ringThickness</item>
+    <item name="ringColor">@color/PointViewColor</item>
+  </style>
 
 </resources>

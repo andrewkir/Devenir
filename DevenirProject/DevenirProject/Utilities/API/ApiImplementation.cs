@@ -131,10 +131,12 @@ namespace DevenirProject.Utilities.API
             catch (HttpRequestException)
             {
                 Toast.MakeText(Application.Context, $"Отсутствует подключение к сервису", ToastLength.Short).Show();
+                RequestResultEvent?.Invoke(false, null);
             }
             catch (Exception ex)
             {
                 Toast.MakeText(Application.Context, $"Произошла непредвиденная ошибка " + ex.Message, ToastLength.Short).Show();
+                RequestResultEvent?.Invoke(false, null);
             }
         }
 
