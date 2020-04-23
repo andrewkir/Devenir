@@ -21,6 +21,10 @@ namespace DevenirProject.Views
 
         Paint linePaint = new Paint(PaintFlags.AntiAlias);
 
+        Paint imagePaint = new Paint(PaintFlags.AntiAlias);
+
+        Bitmap image;
+
         public MultiPointCropView(Context context) : base(context)
         {
         }
@@ -72,7 +76,7 @@ namespace DevenirProject.Views
             points.Add(point);
             points.Add(point2);
 
-            linePaint.Color = Color.BlueViolet;
+            linePaint.Color = point.pointColor;
             linePaint.SetStyle(Paint.Style.Stroke);
             linePaint.StrokeWidth = 5;
         }
@@ -96,6 +100,34 @@ namespace DevenirProject.Views
             }
         }
 
+        public void SetDotsDefault()
+        {
+            if (image != null)
+            {
+                float radius = points[0].radius;
+                points[0].pointX = PaddingLeft + radius;
+                points[0].pointY = PaddingTop + radius;
+
+                points[1].pointX = PaddingLeft + image.Width + points[0].radius - 1;
+                points[1].pointY = PaddingTop + radius;
+
+                points[2].pointX = PaddingLeft + image.Width + points[2].radius - 1;
+                points[2].pointY = image.Height - PaddingBottom + points[2].radius - 1;
+
+                points[3].pointX = PaddingLeft + radius;
+                points[3].pointY = image.Height - PaddingBottom + points[3].radius - 1;
+
+                RequestLayout();
+            }
+        }
+
+        public void SetBitmap(Bitmap bitmap)
+        {
+            RequestLayout();
+            image = scaleBitmapAndKeepRation(bitmap, Math.Abs(Height - 2 * (int)points[0].radius), Math.Abs(Width - 2 * (int)points[0].radius));
+            RequestLayout();
+        }
+
         public void PointTouchListener(object s, TouchEventArgs e)
         {
             switch (e.Event.Action)
@@ -111,15 +143,17 @@ namespace DevenirProject.Views
                     float new_x = e.Event.RawX + (s as Point).pointdX + (s as Point).radius;
                     float new_y = e.Event.RawY + (s as Point).pointdY + (s as Point).radius;
 
-                    if (new_x + (s as Point).radius < Width - PaddingRight && new_x - (s as Point).radius > PaddingLeft) (s as Point).pointX = new_x;
-                    if (new_y + (s as Point).radius < Height - PaddingBottom && new_y - (s as Point).radius > PaddingTop) (s as Point).pointY = new_y;
+                    if (image != null)
+                    {
+                        if (new_x < PaddingLeft + image.Width + (s as Point).radius && new_x - (s as Point).radius > PaddingLeft) (s as Point).pointX = new_x;
+                        if (new_y < image.Height - PaddingBottom + (s as Point).radius && new_y - (s as Point).radius > PaddingTop) (s as Point).pointY = new_y;
 
-                    if (new_x + (s as Point).radius >= Width - PaddingRight) (s as Point).pointX = Width - PaddingRight - (s as Point).radius - 1;
-                    if (new_x - (s as Point).radius <= PaddingLeft) (s as Point).pointX = PaddingLeft + (s as Point).radius + 1;
+                        if (new_x  >= PaddingLeft + image.Width + (s as Point).radius) (s as Point).pointX = PaddingLeft + image.Width + (s as Point).radius - 1;
+                        if (new_x - (s as Point).radius <= PaddingLeft) (s as Point).pointX = PaddingLeft + (s as Point).radius + 1;
 
-                    if (new_y + (s as Point).radius >= Height - PaddingBottom) (s as Point).pointY = Height - PaddingBottom - (s as Point).radius - 1;
-                    if (new_y - (s as Point).radius <= PaddingTop) (s as Point).pointY = PaddingTop + (s as Point).radius + 1;
-
+                        if (new_y  >= image.Height - PaddingBottom + (s as Point).radius) (s as Point).pointY = image.Height - PaddingBottom + (s as Point).radius - 1;
+                        if (new_y - (s as Point).radius <= PaddingTop) (s as Point).pointY = PaddingTop + (s as Point).radius + 1;
+                    }
 
                     foreach (var point in points)
                     {
@@ -142,12 +176,15 @@ namespace DevenirProject.Views
         protected override void DispatchDraw(Canvas canvas)
         {
 
+            if (image != null)
+            {
+                canvas.DrawBitmap(image, points[0].radius, points[0].radius, imagePaint);
+            }
+
             canvas.DrawLine(points[0].pointX, points[0].pointY, points[1].pointX, points[1].pointY, linePaint);
             canvas.DrawLine(points[1].pointX, points[1].pointY, points[2].pointX, points[2].pointY, linePaint);
             canvas.DrawLine(points[2].pointX, points[2].pointY, points[3].pointX, points[3].pointY, linePaint);
             canvas.DrawLine(points[3].pointX, points[3].pointY, points[0].pointX, points[0].pointY, linePaint);
-
-
             base.DispatchDraw(canvas);
         }
 
@@ -161,6 +198,12 @@ namespace DevenirProject.Views
             }
             return false;
         }
-
+        public static Bitmap scaleBitmapAndKeepRation(Bitmap targetBmp, int reqHeightInPixels, int reqWidthInPixels)
+        {
+            Matrix matrix = new Matrix();
+            matrix.SetRectToRect(new RectF(0, 0, targetBmp.Width, targetBmp.Height), new RectF(0, 0, reqWidthInPixels, reqHeightInPixels), Matrix.ScaleToFit.Center);
+            Bitmap scaledBitmap = Bitmap.CreateBitmap(targetBmp, 0, 0, targetBmp.Width, targetBmp.Height, matrix, true);
+            return scaledBitmap;
+        }
     }
 }

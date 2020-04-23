@@ -24,6 +24,8 @@ using Org.Json;
 using Android.Gms.Common;
 using Android.Gms.SafetyNet;
 using Android.Support.V4.Widget;
+using DevenirProject.Views;
+using Android.Content;
 
 namespace DevenirProject
 {
@@ -72,12 +74,15 @@ namespace DevenirProject
             text = FindViewById<TextView>(Resource.Id.textView1);
 
 
-            imageManager.AddOnImageResultListener(delegate (Bitmap bitmap, Exception ex)
+            imageManager.AddOnImageResultListener(delegate (Bitmap bitmap, string path, Exception ex)
             {
                 if (ex == null)
                 {
                     imageview.SetImageBitmap(bitmap);
                     photoResult = bitmap;
+                    Intent intent = new Intent(this, typeof(PhotoCropActivity));
+                    intent.PutExtra("image", path);
+                    StartActivity(intent);
                 }
                 else Toast.MakeText(Application.Context, ex.Message, ToastLength.Short).Show();
             });
@@ -116,6 +121,8 @@ namespace DevenirProject
 
             AttestateButton.Click += delegate
             {
+                if (photoResult != null) FindViewById<MultiPointCropView>(Resource.Id.cropview).SetBitmap(photoResult);
+                FindViewById<MultiPointCropView>(Resource.Id.cropview).SetDotsDefault();
                 var attest = new ApiAttestation();
                 attest.AttestateAsync(this);
             };

@@ -57,6 +57,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/textInputEditText1" />
             <DevenirProject.Views.MultiPointCropView
+                android:id="@+id/cropview"
                 android:layout_width="300dp"
                 android:layout_height="300dp"/>
         </LinearLayout>

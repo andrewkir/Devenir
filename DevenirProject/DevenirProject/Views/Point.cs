@@ -34,6 +34,8 @@ namespace DevenirProject.Views
         Paint ringPaint = new Paint();
         int ringThickness;
 
+        public Color pointColor;
+
 
         public Point(Context context) : this(context, null) { }
 
@@ -45,7 +47,7 @@ namespace DevenirProject.Views
             {
                 var array = context.ObtainStyledAttributes(attrs, Resource.Styleable.Point, defStyleAttr, 0);
                 pointRadius = array.GetDimensionPixelSize(Resource.Styleable.Point_pointRadius, 30);
-                Color pointColor = array.GetColor(Resource.Styleable.Point_color, Color.Red);
+                pointColor = array.GetColor(Resource.Styleable.Point_color, Color.Red);
                 //pointRadius = 30;
                 circlePaint.Color = pointColor;
                 //circlePaint.Color = Color.Red;    

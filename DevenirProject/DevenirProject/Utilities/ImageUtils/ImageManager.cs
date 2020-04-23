@@ -17,7 +17,7 @@ namespace DevenirProject.ImageUtils
 {
     public class ImageManager
     {
-        public delegate void ImageResult(Bitmap bitmap, Exception ex);
+        public delegate void ImageResult(Bitmap bitmap, string path, Exception ex);
         event ImageResult ImageResultEvent;
 
         public async void TakePhoto()
@@ -43,10 +43,11 @@ namespace DevenirProject.ImageUtils
                 // Convert file to byte array and set the resulting bitmap to imageview
                 byte[] imageArray = System.IO.File.ReadAllBytes(file.Path);
                 Bitmap bitmap = BitmapFactory.DecodeByteArray(imageArray, 0, imageArray.Length);
-                ImageResultEvent?.Invoke(bitmap, null);
-            } catch(Exception ex)
+                ImageResultEvent?.Invoke(bitmap, file.Path, null);
+            }
+            catch (Exception ex)
             {
-                ImageResultEvent?.Invoke(null, ex);
+                ImageResultEvent?.Invoke(null, null, ex);
             }
         }
 
@@ -61,18 +62,18 @@ namespace DevenirProject.ImageUtils
                     PhotoSize = PhotoSize.Large
                 });
 
-                if(file == null)
+                if (file == null)
                 {
                     throw new ArgumentException("Ошибка, пустой файл");
                 }
                 // Convert file to byte array and set the resulting bitmap to imageview
                 byte[] imageArray = System.IO.File.ReadAllBytes(file.Path);
                 Bitmap bitmap = BitmapFactory.DecodeByteArray(imageArray, 0, imageArray.Length);
-                ImageResultEvent?.Invoke(bitmap, null);
+                ImageResultEvent?.Invoke(bitmap, file.Path, null);
             }
             catch (Exception ex)
             {
-                ImageResultEvent?.Invoke(null, ex);
+                ImageResultEvent?.Invoke(null, null, ex);
             }
         }
 
