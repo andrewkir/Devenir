@@ -44,10 +44,5 @@ namespace DevenirProject
                 init = false;
             }
         }
-
-        protected override void OnStart()
-        {
-            base.OnStart();
-        }
     }
 }

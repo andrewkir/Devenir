@@ -26,6 +26,7 @@ using Android.Gms.SafetyNet;
 using Android.Support.V4.Widget;
 using DevenirProject.Views;
 using Android.Content;
+using Com.Google.Android.Cameraview;
 
 namespace DevenirProject
 {
@@ -48,7 +49,8 @@ namespace DevenirProject
         readonly string[] permissions =
         {
             Manifest.Permission.ReadExternalStorage,
-            Manifest.Permission.WriteExternalStorage
+            Manifest.Permission.WriteExternalStorage,
+            Manifest.Permission.Camera
         };
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -111,7 +113,9 @@ namespace DevenirProject
 
             TakePhotoButton.Click += delegate
             {
-                imageManager.TakePhoto();
+                //imageManager.TakePhoto();
+                Intent intent = new Intent(this, typeof(CameraLayout));
+                StartActivity(intent);
             };
 
             PickImageButton.Click += delegate
@@ -121,8 +125,7 @@ namespace DevenirProject
 
             AttestateButton.Click += delegate
             {
-                if (photoResult != null) FindViewById<MultiPointCropView>(Resource.Id.cropview).SetBitmap(photoResult);
-                FindViewById<MultiPointCropView>(Resource.Id.cropview).SetDotsDefault();
+                FindViewById<CameraView>(Resource.Id.camera).Start();
                 var attest = new ApiAttestation();
                 attest.AttestateAsync(this);
             };

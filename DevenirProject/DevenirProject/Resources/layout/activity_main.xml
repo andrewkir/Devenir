@@ -1,10 +1,10 @@
 <android.support.v4.widget.SwipeRefreshLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:custom="http://schemas.android.com/apk/res-auto"
     android:id="@+id/refreshLayout">
 
     <ScrollView
@@ -56,10 +56,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/textInputEditText1" />
-            <DevenirProject.Views.MultiPointCropView
-                android:id="@+id/cropview"
-                android:layout_width="300dp"
-                android:layout_height="300dp"/>
+
+            <com.google.android.cameraview.CameraView
+                android:id="@+id/camera"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:keepScreenOn="true"
+                android:adjustViewBounds="true"
+                app:autoFocus="true"
+                app:aspectRatio="20:9"
+                app:facing="back"
+                app:flash="auto"/>
         </LinearLayout>
     </ScrollView>
 </android.support.v4.widget.SwipeRefreshLayout>
