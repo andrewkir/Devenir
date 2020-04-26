@@ -48,10 +48,7 @@ namespace DevenirProject.Views
                 var array = context.ObtainStyledAttributes(attrs, Resource.Styleable.Point, defStyleAttr, 0);
                 pointRadius = array.GetDimensionPixelSize(Resource.Styleable.Point_pointRadius, 30);
                 pointColor = array.GetColor(Resource.Styleable.Point_color, Color.Red);
-                //pointRadius = 30;
                 circlePaint.Color = pointColor;
-                //circlePaint.Color = Color.Red;    
-                //array.Recycle();
 
 
 
