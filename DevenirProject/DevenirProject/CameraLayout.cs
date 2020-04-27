@@ -26,10 +26,13 @@ namespace DevenirProject
         ImageButton toggleFlashButton;
         Button takePictureButton;
         ImageButton openGalleryButton;
+        TextView aspectRatioView;
 
         ImageManager imageManager;
 
         int flashCurrent = 0;
+        int currentAspectRatio;
+
         string path;
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -41,6 +44,7 @@ namespace DevenirProject
             toggleFlashButton = FindViewById<ImageButton>(Resource.Id.toggleFlashButton);
             takePictureButton = FindViewById<Button>(Resource.Id.takePictureButton);
             openGalleryButton = FindViewById<ImageButton>(Resource.Id.openGalleryButton);
+            aspectRatioView = FindViewById<TextView>(Resource.Id.aspectRatioView);
 
             camera = FindViewById<CameraView>(Resource.Id.cameraView);
             camera.AddCallback(new CameraViewCallback(camera, this, delegate (string path)
@@ -82,6 +86,14 @@ namespace DevenirProject
 
             toggleFlashButton.Click += delegate
             {
+                AspectRatio[] ratios = camera.SupportedAspectRatios.ToArray();
+                foreach (var item in ratios)
+                {
+                    Log.Debug("ratio", item.ToString());
+                }
+                AspectRatio currentRatio = camera.AspectRatio;
+                var x = currentRatio.GetX();
+                var y = currentRatio.GetY();
                 ToggleFlash();
             };
 
@@ -89,12 +101,17 @@ namespace DevenirProject
             {
                 imageManager.PickPhoto();
             };
+
+            aspectRatioView.Click += delegate{
+                ToggleAspectRatio();
+            };
         }
 
         protected override void OnResume()
         {
             base.OnResume();
             camera.Start();
+            CalculateAndSetAspectRatio(camera);
             try
             {
                 camera.Flash = CameraView.FlashAuto;
@@ -138,6 +155,56 @@ namespace DevenirProject
                 Toast.MakeText(Application.Context, "Ошибка во время работы со вспышкой", ToastLength.Short).Show();
             }
         }
+
+        private void ToggleAspectRatio()
+        {
+            if (camera != null)
+            {
+                AspectRatio[] ratios = camera.SupportedAspectRatios.ToArray();
+                camera.AspectRatio = ratios[(++currentAspectRatio) % ratios.Length];
+                aspectRatioView.Text = camera.AspectRatio.ToString();
+            }
+        }
+
+        private void CalculateAndSetAspectRatio(CameraView camera)
+        {
+            if (camera != null)
+            {
+                Display display = WindowManager.DefaultDisplay;
+                int width = display.Width;
+                int height = display.Height;
+
+                double screenRatio;
+
+
+                var orientation = Resources.Configuration.Orientation;
+                if (orientation == Android.Content.Res.Orientation.Portrait)
+                {
+                    screenRatio = (double)height / width;
+                }
+                else
+                {
+                    screenRatio = (double)width / height;
+                }
+
+                AspectRatio[] ratios = camera.SupportedAspectRatios.ToArray();
+                List<double> ratiosValues = new List<double>();
+                foreach (var ratio in ratios)
+                {
+                    ratiosValues.Add(Math.Abs((double)ratio.GetX() / ratio.GetY() - screenRatio));
+                }
+
+                int index = ratiosValues
+                    .Select((n, i) => new { index = i, value = n })
+                    .OrderBy(item => item.value)
+                    .First().index;
+                camera.AspectRatio = ratios[index];
+                currentAspectRatio = index;
+                aspectRatioView.Text = camera.AspectRatio.ToString();
+            }
+        }
+
+
         class CameraViewCallback : CameraView.Callback
         {
 
