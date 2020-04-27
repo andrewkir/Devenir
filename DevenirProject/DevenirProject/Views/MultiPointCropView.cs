@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using Android.App;
-using Android.Content;
+﻿using Android.Content;
 using Android.Graphics;
-using Android.OS;
-using Android.Runtime;
 using Android.Util;
 using Android.Views;
-using Android.Widget;
-using Java.Interop;
+using System;
+using System.Collections.Generic;
 
 namespace DevenirProject.Views
 {
@@ -24,6 +16,11 @@ namespace DevenirProject.Views
         Paint imagePaint = new Paint(PaintFlags.AntiAlias);
 
         Bitmap image;
+        Bitmap srcBitmap;
+        Bitmap resultPreviewBitmap;
+
+        float widthDiff = 1;
+        float heightDiff = 1;
 
         public MultiPointCropView(Context context) : base(context)
         {
@@ -87,7 +84,12 @@ namespace DevenirProject.Views
             {
                 MeasureChild(point, widthMeasureSpec, heightMeasureSpec);
             }
-            SetMeasuredDimension(MeasureSpec.GetSize(widthMeasureSpec), MeasureSpec.GetSize(heightMeasureSpec));
+            if(image == null) SetMeasuredDimension(MeasureSpec.GetSize(widthMeasureSpec), MeasureSpec.GetSize(heightMeasureSpec));
+            else
+            {
+                int needHeight = PaddingTop + points[0].MeasuredHeight + image.Height + PaddingBottom;
+                SetMeasuredDimension(MeasureSpec.GetSize(widthMeasureSpec), needHeight);
+            }
         }
 
         protected override void OnLayout(bool changed, int l, int t, int r, int b)
@@ -124,7 +126,12 @@ namespace DevenirProject.Views
         public void SetBitmap(Bitmap bitmap)
         {
             RequestLayout();
-            image = scaleBitmapAndKeepRation(bitmap, Math.Abs(Height - 2 * (int)points[0].radius), Math.Abs(Width - 2 * (int)points[0].radius));
+            srcBitmap = bitmap;
+            image = scaleBitmapAndKeepRation(bitmap, Math.Abs(Height - 2 * (int)points[0].radius - PaddingTop - PaddingBottom), Math.Abs(Width - 2 * (int)points[0].radius - PaddingLeft - PaddingRight));
+
+            widthDiff = (float)bitmap.Width / image.Width;
+            heightDiff = (float)bitmap.Height / image.Height;
+            resultPreviewBitmap = Bitmap.CreateBitmap(image.Width, image.Height, Bitmap.Config.Argb8888);
             RequestLayout();
         }
 
@@ -148,10 +155,10 @@ namespace DevenirProject.Views
                         if (new_x < PaddingLeft + image.Width + (s as Point).radius && new_x - (s as Point).radius > PaddingLeft) (s as Point).pointX = new_x;
                         if (new_y < image.Height - PaddingBottom + (s as Point).radius && new_y - (s as Point).radius > PaddingTop) (s as Point).pointY = new_y;
 
-                        if (new_x  >= PaddingLeft + image.Width + (s as Point).radius) (s as Point).pointX = PaddingLeft + image.Width + (s as Point).radius - 1;
+                        if (new_x >= PaddingLeft + image.Width + (s as Point).radius) (s as Point).pointX = PaddingLeft + image.Width + (s as Point).radius - 1;
                         if (new_x - (s as Point).radius <= PaddingLeft) (s as Point).pointX = PaddingLeft + (s as Point).radius + 1;
 
-                        if (new_y  >= image.Height - PaddingBottom + (s as Point).radius) (s as Point).pointY = image.Height - PaddingBottom + (s as Point).radius - 1;
+                        if (new_y >= image.Height - PaddingBottom + (s as Point).radius) (s as Point).pointY = image.Height + (s as Point).radius - 1;
                         if (new_y - (s as Point).radius <= PaddingTop) (s as Point).pointY = PaddingTop + (s as Point).radius + 1;
                     }
 
@@ -176,16 +183,61 @@ namespace DevenirProject.Views
         protected override void DispatchDraw(Canvas canvas)
         {
 
-            if (image != null)
-            {
-                canvas.DrawBitmap(image, points[0].radius, points[0].radius, imagePaint);
-            }
-
             canvas.DrawLine(points[0].pointX, points[0].pointY, points[1].pointX, points[1].pointY, linePaint);
             canvas.DrawLine(points[1].pointX, points[1].pointY, points[2].pointX, points[2].pointY, linePaint);
             canvas.DrawLine(points[2].pointX, points[2].pointY, points[3].pointX, points[3].pointY, linePaint);
             canvas.DrawLine(points[3].pointX, points[3].pointY, points[0].pointX, points[0].pointY, linePaint);
+
+            if (image != null)
+            {
+                imagePaint.Alpha = 50;
+                canvas.DrawBitmap(image, points[0].radius + PaddingLeft, points[0].radius + PaddingTop, imagePaint);
+                imagePaint.Reset();
+                imagePaint.Flags = PaintFlags.AntiAlias;
+            }
+
+            if (image != null)
+            {
+                resultPreviewBitmap.EraseColor(Color.Transparent);
+                Canvas cs = new Canvas(resultPreviewBitmap);
+                Path path = new Path();
+                path.MoveTo(points[0].pointX - points[0].radius, points[0].pointY - points[0].radius);
+                path.LineTo(points[1].pointX - points[0].radius, points[1].pointY - points[0].radius);
+                path.LineTo(points[2].pointX - points[0].radius, points[2].pointY - points[0].radius);
+                path.LineTo(points[3].pointX - points[0].radius, points[3].pointY - points[0].radius);
+                path.LineTo(points[0].pointX - points[0].radius, points[0].pointY - points[0].radius);
+                cs.ClipPath(path);
+                cs.DrawBitmap(image, 0, 0, imagePaint);
+                canvas.DrawBitmap(resultPreviewBitmap, points[0].radius, points[0].radius, imagePaint);
+            }
+
             base.DispatchDraw(canvas);
+        }
+
+        public Bitmap CropView()
+        {
+            if (srcBitmap != null)
+            {
+                Bitmap croppedImage = Bitmap.CreateBitmap(srcBitmap.Width, srcBitmap.Height, Bitmap.Config.Argb8888);
+                Canvas cs = new Canvas(croppedImage);
+                Path path = new Path();
+                path.MoveTo(widthDiff * (points[0].pointX - points[0].radius), heightDiff * (points[0].pointY - points[0].radius));
+                path.LineTo(widthDiff * (points[1].pointX - points[0].radius), heightDiff * (points[1].pointY - points[0].radius));
+                path.LineTo(widthDiff * (points[2].pointX - points[0].radius), heightDiff * (points[2].pointY - points[0].radius));
+                path.LineTo(widthDiff * (points[3].pointX - points[0].radius), heightDiff * (points[3].pointY - points[0].radius));
+                path.LineTo(widthDiff * (points[0].pointX - points[0].radius), heightDiff * (points[0].pointY - points[0].radius));
+                cs.ClipPath(path);
+                cs.DrawBitmap(srcBitmap, 0, 0, imagePaint);
+                RectF pathRect = new RectF();
+                path.ComputeBounds(pathRect, true);
+
+                if ((int)pathRect.Width() == 0 || (int)pathRect.Height() == 0)
+                {
+                    return srcBitmap;
+                }
+                else return Bitmap.CreateBitmap(croppedImage, (int)pathRect.Left, (int)pathRect.Top, (int)pathRect.Width(), (int)pathRect.Height());
+            }
+            return null;
         }
 
         private bool CheckCollision(Point point1, Point point2)

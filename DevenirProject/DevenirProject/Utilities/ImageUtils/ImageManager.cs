@@ -59,7 +59,7 @@ namespace DevenirProject.ImageUtils
 
                 var file = await CrossMedia.Current.PickPhotoAsync(new PickMediaOptions
                 {
-                    PhotoSize = PhotoSize.Large
+                    PhotoSize = PhotoSize.Full
                 });
 
                 if (file == null)
