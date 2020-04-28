@@ -10,6 +10,7 @@ using Android.Graphics;
 using Android.Media;
 using Android.OS;
 using Android.Runtime;
+using Android.Support.Design.Widget;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
@@ -18,14 +19,15 @@ using Java.IO;
 
 namespace DevenirProject
 {
-    [Activity(Label = "Activity1")]
+    [Activity(Label = "PhotoCropActivity", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait)]
     public class PhotoCropActivity : Activity
     {
         MultiPointCropView cropView;
         Bitmap bitmap;
 
-        Button setDotsDefault;
-        Button cropViewButton;
+        FloatingActionButton floatingAddButton;
+        FloatingActionButton floatingDoneButton;
+        Switch switchMode;
 
         bool init = true;
         protected override void OnCreate(Bundle savedInstanceState)
@@ -35,6 +37,12 @@ namespace DevenirProject
             SetContentView(Resource.Layout.activity_photocrop);
             string path = Intent.GetStringExtra("image");
 
+            if (Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.Kitkat)
+            {
+                Window w = Window;
+                w.SetFlags(WindowManagerFlags.TranslucentStatus, WindowManagerFlags.TranslucentStatus);
+            }
+
             if (path != "" && path != null)
             {
                 bitmap = GetBitmap(path);
@@ -43,13 +51,30 @@ namespace DevenirProject
             cropView = FindViewById<MultiPointCropView>(Resource.Id.cropview_layout);
             cropView.ViewTreeObserver.GlobalLayout += ViewTreeObserver_GlobalLayout;
 
-            setDotsDefault = FindViewById<Button>(Resource.Id.resetPointsButton);
-            setDotsDefault.Click += delegate { cropView.SetDotsDefault(); };
+            floatingAddButton = FindViewById<FloatingActionButton>(Resource.Id.floatingAddButton);
+            floatingAddButton.Click += delegate
+            {
 
-            cropViewButton = FindViewById<Button>(Resource.Id.cropViewButton);
-            cropViewButton.Click += delegate {
+            };
+            floatingAddButton.LongClick += delegate
+            {
+                AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+                alertDialog.SetTitle("Подтвердите действие");
+                alertDialog.SetMessage("Вы уверены, что хотите сбросить состояние до первоначального?");
+                alertDialog.SetPositiveButton("Да", (sender, args) =>
+                {
+                    cropView.SetPointsDefault();
+                });
+                alertDialog.SetNeutralButton("Отмена", (sender, args) => { });
+                Dialog dialog = alertDialog.Create();
+                dialog.Show();
+            };
+
+            floatingDoneButton = FindViewById<FloatingActionButton>(Resource.Id.floatingDoneButton);
+            floatingDoneButton.Click += delegate
+            {
                 Bitmap res = cropView.CropView();
-                if(res != null)
+                if (res != null)
                 {
                     string path = System.IO.Path.Combine(
                         Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryPictures).AbsolutePath, "Devenir");
@@ -81,7 +106,21 @@ namespace DevenirProject
                         Toast.MakeText(this, "Error: " + e.Message, ToastLength.Short).Show();
                     }
                 }
-            
+            };
+
+
+            cropView.SetCropColor(Color.Gray);
+            switchMode = FindViewById<Switch>(Resource.Id.switchMode);
+            switchMode.Click += delegate
+            {
+                if (!switchMode.Checked)
+                {
+                    cropView.SetCropColor(Color.Gray);
+                }
+                else
+                {
+                    cropView.SetCropColor(Resources.GetColor(Resource.Color.PointViewColor));
+                }
             };
         }
 
@@ -90,7 +129,7 @@ namespace DevenirProject
             if (init)
             {
                 cropView.SetBitmap(bitmap);
-                cropView.SetDotsDefault();
+                cropView.SetPointsDefault();
                 init = false;
             }
         }

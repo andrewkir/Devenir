@@ -88,7 +88,8 @@ namespace DevenirProject.Views
             else
             {
                 int needHeight = PaddingTop + points[0].MeasuredHeight + image.Height + PaddingBottom;
-                SetMeasuredDimension(MeasureSpec.GetSize(widthMeasureSpec), needHeight);
+                int needWidth = PaddingLeft + points[0].MeasuredWidth + image.Width + PaddingRight;
+                SetMeasuredDimension(needWidth, needHeight);
             }
         }
 
@@ -102,7 +103,7 @@ namespace DevenirProject.Views
             }
         }
 
-        public void SetDotsDefault()
+        public void SetPointsDefault()
         {
             if (image != null)
             {
@@ -121,6 +122,16 @@ namespace DevenirProject.Views
 
                 RequestLayout();
             }
+        }
+
+        public void SetCropColor(Color color)
+        {
+            foreach (var point in points)
+            {
+                point.ChangePointColor(color);
+            }
+            linePaint.Color = color;
+            Invalidate();
         }
 
         public void SetBitmap(Bitmap bitmap)

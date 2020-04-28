@@ -63,6 +63,13 @@ namespace DevenirProject.Views
             }
         }
 
+        public void ChangePointColor(Color color)
+        {
+            ringPaint.Color = color;
+            circlePaint.Color = color;
+            Invalidate();
+        }
+
         protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)
         {
             SetMeasuredDimension(2 * ringRadius + 2 * ringThickness, 2 * ringRadius + 2 * ringThickness);

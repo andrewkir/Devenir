@@ -375,7 +375,7 @@ namespace DevenirProject
                     FileStream outStream = new FileStream(filename, FileMode.Create);
                     resultImage.Compress(Bitmap.CompressFormat.Jpeg, 90, outStream);
                     outStream.Close();
-
+                     
                     var mediaScanIntent = new Intent(Intent.ActionMediaScannerScanFile);
                     mediaScanIntent.SetData(Android.Net.Uri.FromFile(new Java.IO.File(filename)));
                     activity.SendBroadcast(mediaScanIntent);

@@ -55,6 +55,7 @@ namespace DevenirProject
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
+            SetTheme(Resource.Style.AppTheme);
             base.OnCreate(savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             // Set our view from the "main" layout resource
