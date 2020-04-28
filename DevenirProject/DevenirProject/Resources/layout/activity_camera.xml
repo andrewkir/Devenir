@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:fitsSystemWindows="true"
-    android:background="@android:color/darker_gray"
+    android:background="#292929"
     android:layout_height="match_parent">
     <com.google.android.cameraview.CameraView
         android:id="@+id/cameraView"

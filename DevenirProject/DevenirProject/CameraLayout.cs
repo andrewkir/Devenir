@@ -25,15 +25,14 @@ namespace DevenirProject
 
         ImageButton toggleFlashButton;
         Button takePictureButton;
+        ImageButton openDefaultCameraButton;
         ImageButton openGalleryButton;
         TextView aspectRatioView;
 
         ImageManager imageManager;
 
-        int flashCurrent = 0;
-        int currentAspectRatio;
-
-        string path;
+        int flashCurrent = CameraView.FlashAuto;
+        int currentAspectRatio = -1;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -45,6 +44,7 @@ namespace DevenirProject
             takePictureButton = FindViewById<Button>(Resource.Id.takePictureButton);
             openGalleryButton = FindViewById<ImageButton>(Resource.Id.openGalleryButton);
             aspectRatioView = FindViewById<TextView>(Resource.Id.aspectRatioView);
+            openDefaultCameraButton = FindViewById<ImageButton>(Resource.Id.openDefaultCamera);
 
             camera = FindViewById<CameraView>(Resource.Id.cameraView);
             camera.AddCallback(new CameraViewCallback(camera, this, delegate (string path)
@@ -54,8 +54,6 @@ namespace DevenirProject
                     Intent intent = new Intent(this, typeof(PhotoCropActivity));
                     intent.PutExtra("image", path);
                     StartActivity(intent);
-
-                    this.path = path;
                 }
                 else Toast.MakeText(Application.Context, "Ошибка во время сохранения фотографии", ToastLength.Short).Show();
             }));
@@ -63,13 +61,15 @@ namespace DevenirProject
             imageManager = new ImageManager();
             imageManager.AddOnImageResultListener(delegate (Bitmap bitmap, string path, Exception ex)
             {
-                if (ex == null)
+                if (path != null)
                 {
                     Intent intent = new Intent(this, typeof(PhotoCropActivity));
                     intent.PutExtra("image", path);
                     StartActivity(intent);
+                    Finish();
                 }
-                else Toast.MakeText(Application.Context, ex.Message, ToastLength.Short).Show();
+                else if (ex != null) Toast.MakeText(Application.Context, ex.Message, ToastLength.Short).Show();
+                else Recreate();
             });
 
 
@@ -86,14 +86,6 @@ namespace DevenirProject
 
             toggleFlashButton.Click += delegate
             {
-                AspectRatio[] ratios = camera.SupportedAspectRatios.ToArray();
-                foreach (var item in ratios)
-                {
-                    Log.Debug("ratio", item.ToString());
-                }
-                AspectRatio currentRatio = camera.AspectRatio;
-                var x = currentRatio.GetX();
-                var y = currentRatio.GetY();
                 ToggleFlash();
             };
 
@@ -102,31 +94,61 @@ namespace DevenirProject
                 imageManager.PickPhoto();
             };
 
-            aspectRatioView.Click += delegate{
+            aspectRatioView.Click += delegate
+            {
                 ToggleAspectRatio();
             };
+
+            openDefaultCameraButton.Click += delegate
+            {
+                camera.Dispose();
+                imageManager.TakePhoto();
+            };
+        }
+
+        protected override void OnSaveInstanceState(Bundle outState)
+        {
+            outState.PutInt("CURRENT_FLASH_MODE", flashCurrent);
+            outState.PutInt("CURRENT_ASPECT_RATIO", currentAspectRatio);
+            base.OnSaveInstanceState(outState);
+        }
+
+        protected override void OnRestoreInstanceState(Bundle savedInstanceState)
+        {
+            base.OnRestoreInstanceState(savedInstanceState);
+
+            flashCurrent = savedInstanceState.GetInt("CURRENT_FLASH_MODE", CameraView.FlashAuto);
+            currentAspectRatio = savedInstanceState.GetInt("CURRENT_ASPECT_RATIO", -1);
         }
 
         protected override void OnResume()
         {
             base.OnResume();
-            camera.Start();
-            CalculateAndSetAspectRatio(camera);
             try
             {
-                camera.Flash = CameraView.FlashAuto;
-                toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_auto_white));
+                camera.Start();
+                if (currentAspectRatio == -1) CalculateAndSetAspectRatio(camera);
+                else
+                {
+                    currentAspectRatio--;
+                    ToggleAspectRatio();
+                }
+
+                flashCurrent--;
+                ToggleFlash();
             }
             catch (Exception ex)
             {
-                Toast.MakeText(Application.Context, "Ошибка во время работы со вспышкой", ToastLength.Short).Show();
             }
         }
 
         protected override void OnPause()
         {
+            if (camera != null)
+            {
+                camera.Stop();
+            }
             base.OnPause();
-            camera.Stop();
         }
 
         private void ToggleFlash()
