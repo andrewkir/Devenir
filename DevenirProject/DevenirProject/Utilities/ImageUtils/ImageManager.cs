@@ -66,6 +66,7 @@ namespace DevenirProject.ImageUtils
                 if (file == null)
                 {
                     ImageResultEvent?.Invoke(null, null, null);
+                    return;
                 }
                 // Convert file to byte array and set the resulting bitmap to imageview
                 byte[] imageArray = System.IO.File.ReadAllBytes(file.Path);
