@@ -38,6 +38,7 @@ namespace DevenirProject
         int flashCurrent = CameraView.FlashAuto;
         int currentAspectRatio = -1;
         int lastAngle = 0;
+        bool isCameraTurnedOff = false;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -58,12 +59,17 @@ namespace DevenirProject
             {
                 if (path != null)
                 {
-                    camera.Dispose();
-                    Intent intent = new Intent(this, typeof(PhotoCropActivity));
+                    Intent intent = new Intent(this, typeof(MainViewActivity));
                     intent.PutExtra("image", path);
                     StartActivity(intent);
+                    isCameraTurnedOff = false;
                 }
                 else if (ex != null) Toast.MakeText(Application.Context, ex.Message, ToastLength.Short).Show();
+                else
+                {
+                    isCameraTurnedOff = false;
+                    camera.Start();
+                }
             });
 
 
@@ -85,9 +91,9 @@ namespace DevenirProject
 
             openGalleryButton.Click += delegate
             {
-                camera.Dispose();
+                camera.Stop();
+                isCameraTurnedOff = true;
                 imageManager.PickPhoto();
-                InitializeCamera();
             };
 
             aspectRatioView.Click += delegate
@@ -97,9 +103,9 @@ namespace DevenirProject
 
             openDefaultCameraButton.Click += delegate
             {
-                camera.Dispose();
+                camera.Stop();
+                isCameraTurnedOff = true;
                 imageManager.TakePhoto();
-                InitializeCamera();
             };
 
 
@@ -116,12 +122,14 @@ namespace DevenirProject
                     openGalleryButton.Animate().Rotation(angle).Start();
                     openDefaultCameraButton.Animate().Rotation(angle).Start();
                     aspectRatioView.Animate().Rotation(angle).Start();
-                    if(angle == -180)
+                    if (angle == -180)
                         lastAngle = 180;
                     else
                         lastAngle = angle;
                 }
             });
+
+            camera.Start();
         }
 
 
@@ -143,10 +151,9 @@ namespace DevenirProject
 
         protected override void OnResume()
         {
-            base.OnResume();
             try
             {
-                camera.Start();
+                if (!isCameraTurnedOff) camera.Start();
                 if (currentAspectRatio == -1) CalculateAndSetAspectRatio(camera);
                 else
                 {
@@ -160,7 +167,10 @@ namespace DevenirProject
             catch (Exception ex)
             {
                 Log.Debug("Camera error", ex.StackTrace);
+                //InitializeCamera();
+                //camera.Start();
             }
+            base.OnResume();
         }
 
         protected override void OnStart()
@@ -177,17 +187,20 @@ namespace DevenirProject
 
         private void InitializeCamera()
         {
-            camera = FindViewById<CameraView>(Resource.Id.cameraView);
-            camera.AddCallback(new CameraViewCallback(camera, this, delegate (string path)
+            if (!isCameraTurnedOff)
             {
-                if (path != null && path != "")
+                camera = FindViewById<CameraView>(Resource.Id.cameraView);
+                camera.AddCallback(new CameraViewCallback(camera, this, delegate (string path)
                 {
-                    Intent intent = new Intent(this, typeof(PhotoCropActivity));
-                    intent.PutExtra("image", path);
-                    StartActivity(intent);
-                }
-                else Toast.MakeText(Application.Context, "Ошибка во время сохранения фотографии", ToastLength.Short).Show();
-            }));
+                    if (path != null && path != "")
+                    {
+                        Intent intent = new Intent(this, typeof(MainViewActivity));
+                        intent.PutExtra("image", path);
+                        StartActivity(intent);
+                    }
+                    else Toast.MakeText(Application.Context, "Ошибка во время сохранения фотографии", ToastLength.Short).Show();
+                }));
+            }
         }
 
         protected override void OnPause()
@@ -334,7 +347,7 @@ namespace DevenirProject
                 this.imageResult = imageResult;
             }
 
-            public override async void OnPictureTaken(CameraView camera, byte[] image)
+            public override void OnPictureTaken(CameraView camera, byte[] image)
             {
                 var path = System.IO.Path.Combine(Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryPictures).AbsolutePath, "Devenir");
 
@@ -375,7 +388,7 @@ namespace DevenirProject
                     FileStream outStream = new FileStream(filename, FileMode.Create);
                     resultImage.Compress(Bitmap.CompressFormat.Jpeg, 90, outStream);
                     outStream.Close();
-                     
+
                     var mediaScanIntent = new Intent(Intent.ActionMediaScannerScanFile);
                     mediaScanIntent.SetData(Android.Net.Uri.FromFile(new Java.IO.File(filename)));
                     activity.SendBroadcast(mediaScanIntent);

@@ -31,7 +31,7 @@ using Com.Google.Android.Cameraview;
 namespace DevenirProject
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
-    public class MainActivity : AppCompatActivity
+    public class MainActivity : Activity
     {
         Button TakePhotoButton;
         Button ProcessImageButton;
@@ -39,6 +39,7 @@ namespace DevenirProject
         Button AttestateButton;
         ImageView imageview;
         Bitmap photoResult;
+        
         TextView text;
         SwipeRefreshLayout swipeLayout;
 
@@ -83,7 +84,7 @@ namespace DevenirProject
                 {
                     imageview.SetImageBitmap(bitmap);
                     photoResult = bitmap;
-                    Intent intent = new Intent(this, typeof(PhotoCropActivity));
+                    Intent intent = new Intent(this, typeof(MainViewActivity));
                     intent.PutExtra("image", path);
                     StartActivity(intent);
                 }

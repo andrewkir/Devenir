@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -11,54 +10,88 @@ using Android.Media;
 using Android.OS;
 using Android.Runtime;
 using Android.Support.Design.Widget;
-using Android.Util;
 using Android.Views;
 using Android.Widget;
 using DevenirProject.Views;
-using Java.IO;
+using Java.Interop;
 
 namespace DevenirProject
 {
-    [Activity(Label = "PhotoCropActivity", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait)]
-    public class PhotoCropActivity : Activity
+    class PhotoCropFragment : Android.Support.V4.App.Fragment
     {
+        event Action<Bitmap[], Bitmap[]> processBitmapsEvent;
+
+        string path;
+
         MultiPointCropView cropView;
-        Bitmap bitmap;
+        Bitmap srcBitmap;
+
+        List<Bitmap> textModeBitmaps = new List<Bitmap>();
+        List<Bitmap> LaTeXBitmaps = new List<Bitmap>();
 
         FloatingActionButton floatingAddButton;
         FloatingActionButton floatingDoneButton;
         Switch switchMode;
 
         bool init = true;
-        protected override void OnCreate(Bundle savedInstanceState)
+
+
+        public PhotoCropFragment(string path, Action<Bitmap[], Bitmap[]> processBitmap)
         {
-            SetTheme(Resource.Style.AppTheme);
-            base.OnCreate(savedInstanceState);
-            SetContentView(Resource.Layout.activity_photocrop);
-            string path = Intent.GetStringExtra("image");
+            this.path = path;
+            processBitmapsEvent += processBitmap;
+        }
 
-            if (Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.Kitkat)
-            {
-                Window w = Window;
-                w.SetFlags(WindowManagerFlags.TranslucentStatus, WindowManagerFlags.TranslucentStatus);
-            }
+        public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+        {
+            View view = inflater.Inflate(Resource.Layout.fragment_photoCrop, container, false);
+            return view;
+        }
 
+        public override void OnViewCreated(View view, Bundle savedInstanceState)
+        {
             if (path != "" && path != null)
             {
-                bitmap = GetBitmap(path);
+                srcBitmap = GetBitmap(path);
             }
 
-            cropView = FindViewById<MultiPointCropView>(Resource.Id.cropview_layout);
+            cropView = view.FindViewById<MultiPointCropView>(Resource.Id.cropview_layout);
             cropView.ViewTreeObserver.GlobalLayout += ViewTreeObserver_GlobalLayout;
 
-            floatingAddButton = FindViewById<FloatingActionButton>(Resource.Id.floatingAddButton);
+            floatingAddButton = view.FindViewById<FloatingActionButton>(Resource.Id.floatingAddButton);
             floatingAddButton.Click += delegate
             {
+                //LaTeX mode
+                if (switchMode.Checked)
+                {
+                    if (LaTeXBitmaps.Count < 3) LaTeXBitmaps.Add(cropView.CropView());
+                    else
+                    {
+                        var snackbar = Snackbar.Make(view, "Вы не можете добавить больше 3 фрагментов фотографии для анализа", Snackbar.LengthShort);
+                        snackbar.SetAction("Ок", (view) => { });
+                        snackbar.Show();
+                        return;
+                    }
+                }
+                //Text mode
+                else
+                {
+                    if (textModeBitmaps.Count < 3) textModeBitmaps.Add(cropView.CropView());
+                    else
+                    {
+                        var snackbar = Snackbar.Make(view, "Вы не можете добавить больше 3 фрагментов фотографии для анализа", Snackbar.LengthShort);
+                        snackbar.SetAction("Ок", (view) => { });
+                        snackbar.Show();
+                        return;
+                    }
+                }
 
+                cropView.SetPointsDefault();
+                Toast.MakeText(view.Context, "Успешно добавлено", ToastLength.Short).Show();
             };
             floatingAddButton.LongClick += delegate
             {
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+                AlertDialog.Builder alertDialog = new AlertDialog.Builder(view.Context);
                 alertDialog.SetTitle("Подтвердите действие");
                 alertDialog.SetMessage("Вы уверены, что хотите сбросить состояние до первоначального?");
                 alertDialog.SetPositiveButton("Да", (sender, args) =>
@@ -70,48 +103,16 @@ namespace DevenirProject
                 dialog.Show();
             };
 
-            floatingDoneButton = FindViewById<FloatingActionButton>(Resource.Id.floatingDoneButton);
+            floatingDoneButton = view.FindViewById<FloatingActionButton>(Resource.Id.floatingDoneButton);
             floatingDoneButton.Click += delegate
             {
-                Bitmap res = cropView.CropView();
-                if (res != null)
-                {
-                    string path = System.IO.Path.Combine(
-                        Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryPictures).AbsolutePath, "Devenir");
-
-                    var filename = System.IO.Path.Combine(path, $"DEVENIR_{DateTime.Now:yyyy_MM_dd_hh_mm_ss.ff}.jpg");
-                    if (!Directory.Exists(path))
-                    {
-                        Directory.CreateDirectory(path);
-                    }
-                    if (System.IO.File.Exists(filename))
-                    {
-                        System.IO.File.Delete(filename);
-                    }
-
-                    try
-                    {
-                        FileStream outStream = new FileStream(filename, FileMode.Create);
-                        res.Compress(Bitmap.CompressFormat.Jpeg, 90, outStream);
-                        outStream.Close();
-
-                        var mediaScanIntent = new Intent(Intent.ActionMediaScannerScanFile);
-                        mediaScanIntent.SetData(Android.Net.Uri.FromFile(new Java.IO.File(filename)));
-                        SendBroadcast(mediaScanIntent);
-                        Toast.MakeText(this, "Crop saved", ToastLength.Short).Show();
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Debug("ERROR", e.Message);
-                        Toast.MakeText(this, "Error: " + e.Message, ToastLength.Short).Show();
-                    }
-                }
+                processBitmapsEvent?.Invoke(textModeBitmaps.ToArray(), LaTeXBitmaps.ToArray());
             };
 
 
             cropView.SetCropColor(Color.Gray);
-            switchMode = FindViewById<Switch>(Resource.Id.switchMode);
-            switchMode.Click += delegate
+            switchMode = view.FindViewById<Switch>(Resource.Id.switchMode);
+            switchMode.CheckedChange += delegate
             {
                 if (!switchMode.Checked)
                 {
@@ -128,7 +129,7 @@ namespace DevenirProject
         {
             if (init)
             {
-                cropView.SetBitmap(bitmap);
+                cropView.SetBitmap(srcBitmap);
                 cropView.SetPointsDefault();
                 init = false;
             }
