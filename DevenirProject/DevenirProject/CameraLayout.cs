@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-
+using Android;
 using Android.App;
 using Android.Content;
+using Android.Content.PM;
 using Android.Content.Res;
 using Android.Graphics;
 using Android.OS;
@@ -20,7 +21,7 @@ using Java.IO;
 
 namespace DevenirProject
 {
-    [Activity(Label = "CameraLayout", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait)]
+    [Activity(Label = "Devenir", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait, MainLauncher = true)]
     public class CameraLayout : Activity
     {
         OrientationListener orientationListener;
@@ -40,11 +41,20 @@ namespace DevenirProject
         int lastAngle = 0;
         bool isCameraTurnedOff = false;
 
+        readonly string[] permissions =
+        {
+            Manifest.Permission.ReadExternalStorage,
+            Manifest.Permission.WriteExternalStorage,
+            Manifest.Permission.Camera
+        };
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             SetTheme(Resource.Style.AppThemeClearStatusBar);
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_camera);
+
+            if (Build.VERSION.SdkInt > Build.VERSION_CODES.LollipopMr1) RequestPermissions(permissions, 0);
 
             toggleFlashButton = FindViewById<ImageButton>(Resource.Id.toggleFlashButton);
             takePictureButton = FindViewById<Button>(Resource.Id.takePictureButton);
@@ -68,7 +78,7 @@ namespace DevenirProject
                 else
                 {
                     isCameraTurnedOff = false;
-                    camera.Start();
+                    StartCamera();
                 }
             });
 
@@ -91,7 +101,7 @@ namespace DevenirProject
 
             openGalleryButton.Click += delegate
             {
-                camera.Stop();
+                StopCamera();
                 isCameraTurnedOff = true;
                 imageManager.PickPhoto();
             };
@@ -103,7 +113,7 @@ namespace DevenirProject
 
             openDefaultCameraButton.Click += delegate
             {
-                camera.Stop();
+                StopCamera();
                 isCameraTurnedOff = true;
                 imageManager.TakePhoto();
             };
@@ -129,7 +139,7 @@ namespace DevenirProject
                 }
             });
 
-            camera.Start();
+            StartCamera();
         }
 
 
@@ -153,7 +163,7 @@ namespace DevenirProject
         {
             try
             {
-                if (!isCameraTurnedOff) camera.Start();
+                if (!isCameraTurnedOff) StartCamera();
                 if (currentAspectRatio == -1) CalculateAndSetAspectRatio(camera);
                 else
                 {
@@ -201,13 +211,28 @@ namespace DevenirProject
             }
         }
 
+        private void StartCamera()
+        {
+            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted)
+            {
+                camera.Start();
+            }
+        }
+        private void StopCamera()
+        {
+            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted)
+            {
+                camera.Stop();
+            }
+        }
+
         protected override void OnPause()
         {
             try
             {
                 if (camera != null)
                 {
-                    camera.Stop();
+                    StopCamera();
                 }
             }
             catch (Exception ex)
@@ -246,11 +271,14 @@ namespace DevenirProject
 
         private void ToggleAspectRatio()
         {
-            if (camera != null)
+            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted)
             {
-                AspectRatio[] ratios = camera.SupportedAspectRatios.ToArray();
-                camera.AspectRatio = ratios[(++currentAspectRatio) % ratios.Length];
-                aspectRatioView.Text = camera.AspectRatio.ToString();
+                if (camera != null)
+                {
+                    AspectRatio[] ratios = camera.SupportedAspectRatios.ToArray();
+                    camera.AspectRatio = ratios[(++currentAspectRatio) % ratios.Length];
+                    aspectRatioView.Text = camera.AspectRatio.ToString();
+                }
             }
         }
 
@@ -288,6 +316,13 @@ namespace DevenirProject
                 currentAspectRatio = index;
                 aspectRatioView.Text = camera.AspectRatio.ToString();
             }
+        }
+
+        public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
+        {
+            Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+            StartCamera();
+            base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
         private class OrientationListener : OrientationEventListener
