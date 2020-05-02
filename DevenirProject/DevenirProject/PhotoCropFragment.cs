@@ -36,9 +36,9 @@ namespace DevenirProject
         bool init = true;
 
 
-        public PhotoCropFragment(string path, Action<Bitmap[], Bitmap[]> processBitmap)
+        public PhotoCropFragment(Bitmap srcBitmap, Action<Bitmap[], Bitmap[]> processBitmap)
         {
-            this.path = path;
+            this.srcBitmap = srcBitmap;
             processBitmapsEvent += processBitmap;
         }
 
@@ -50,11 +50,6 @@ namespace DevenirProject
 
         public override void OnViewCreated(View view, Bundle savedInstanceState)
         {
-            if (path != "" && path != null)
-            {
-                srcBitmap = GetBitmap(path);
-            }
-
             cropView = view.FindViewById<MultiPointCropView>(Resource.Id.cropview_layout);
             cropView.ViewTreeObserver.GlobalLayout += ViewTreeObserver_GlobalLayout;
 
@@ -135,29 +130,6 @@ namespace DevenirProject
                 cropView.SetPointsDefault();
                 init = false;
             }
-        }
-
-        private Bitmap GetBitmap(string path)
-        {
-            byte[] imageArray = System.IO.File.ReadAllBytes(path);
-            ExifInterface exif = new ExifInterface(path);
-            int orientation = exif.GetAttributeInt(ExifInterface.TagOrientation, 1);
-            Matrix matrix = new Matrix();
-            switch (orientation)
-            {
-                case 3:
-                    matrix.PostRotate(180);
-                    break;
-                case 6:
-                    matrix.PostRotate(90);
-                    break;
-                case 8:
-                    matrix.PostRotate(270);
-                    break;
-            }
-
-            Bitmap bitmap = BitmapFactory.DecodeByteArray(imageArray, 0, imageArray.Length);
-            return Bitmap.CreateBitmap(bitmap, 0, 0, bitmap.Width, bitmap.Height, matrix, true);
         }
     }
 }

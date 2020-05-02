@@ -54,7 +54,7 @@ namespace DevenirProject
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_camera);
 
-            if (Build.VERSION.SdkInt > Build.VERSION_CODES.LollipopMr1) RequestPermissions(permissions, 0);
+            if (Build.VERSION.SdkInt > BuildVersionCodes.LollipopMr1) RequestPermissions(permissions, 0);
 
             toggleFlashButton = FindViewById<ImageButton>(Resource.Id.toggleFlashButton);
             takePictureButton = FindViewById<Button>(Resource.Id.takePictureButton);
@@ -74,7 +74,12 @@ namespace DevenirProject
                     StartActivity(intent);
                     isCameraTurnedOff = false;
                 }
-                else if (ex != null) Toast.MakeText(Application.Context, ex.Message, ToastLength.Short).Show();
+                else if (ex != null)
+                {
+                    Toast.MakeText(Application.Context, ex.Message, ToastLength.Short).Show();
+                    isCameraTurnedOff = false;
+                    StartCamera();
+                }
                 else
                 {
                     isCameraTurnedOff = false;
@@ -91,7 +96,7 @@ namespace DevenirProject
 
             takePictureButton.Click += delegate
             {
-                camera.TakePicture();
+                TakePicture();
             };
 
             toggleFlashButton.Click += delegate
@@ -225,6 +230,13 @@ namespace DevenirProject
                 camera.Stop();
             }
         }
+        private void TakePicture()
+        {
+            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted)
+            {
+                camera.TakePicture();
+            }
+        }
 
         protected override void OnPause()
         {
@@ -244,28 +256,34 @@ namespace DevenirProject
 
         private void ToggleFlash()
         {
-            try
+            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted)
             {
-                flashCurrent = (flashCurrent + 1) % 3;
-                switch (flashCurrent)
+                try
                 {
-                    case 0:
-                        camera.Flash = CameraView.FlashAuto;
-                        toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_auto_white));
-                        break;
-                    case 1:
-                        camera.Flash = CameraView.FlashOn;
-                        toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_on_white));
-                        break;
-                    case 2:
-                        camera.Flash = CameraView.FlashOff;
-                        toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_off_white));
-                        break;
+                    flashCurrent = (flashCurrent + 1) % 3;
+                    switch (flashCurrent)
+                    {
+                        case 0:
+                            camera.Flash = CameraView.FlashAuto;
+                            toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_auto_white));
+                            break;
+                        case 1:
+                            camera.Flash = CameraView.FlashOn;
+                            toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_on_white));
+                            break;
+                        case 2:
+                            camera.Flash = CameraView.FlashOff;
+                            toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_off_white));
+                            break;
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                Toast.MakeText(Application.Context, "Ошибка во время работы со вспышкой", ToastLength.Short).Show();
+                catch (Exception ex)
+                {
+                    Toast.MakeText(Application.Context, "Ошибка во время работы со вспышкой", ToastLength.Short).Show();
+                    
+                    toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_off_white));
+                    flashCurrent = 2;
+                }
             }
         }
 

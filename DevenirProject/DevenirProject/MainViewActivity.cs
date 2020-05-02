@@ -6,6 +6,7 @@ using System.Text;
 using Android.App;
 using Android.Content;
 using Android.Graphics;
+using Android.Media;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
@@ -20,7 +21,7 @@ namespace DevenirProject
     [Activity(Label = "MainViewActivity")]
     public class MainViewActivity : Android.Support.V4.App.FragmentActivity
     {
-        string path;
+        Bitmap sourceBitmap;
         AVLoadingIndicatorView loadingAnimation;
 
         FirebaseImageService firebaseImageService = new FirebaseImageService();
@@ -31,12 +32,14 @@ namespace DevenirProject
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_mainview);
 
+            string path;
             path = Intent.GetStringExtra("image");
+            if(path != null && path!="") sourceBitmap = GetBitmap(path);
 
             latexService = new LatexService(this);
             loadingAnimation = FindViewById<AVLoadingIndicatorView>(Resource.Id.loadingAnimation);
 
-            PhotoCropFragment photoCropFragment = new PhotoCropFragment(path, ProcessBitmaps);
+            PhotoCropFragment photoCropFragment = new PhotoCropFragment(sourceBitmap, ProcessBitmaps);
             Android.Support.V4.App.FragmentManager fragmentManager = SupportFragmentManager;
             Android.Support.V4.App.FragmentTransaction fragmentTransaction = fragmentManager.BeginTransaction();
             fragmentTransaction.Replace(Resource.Id.content_main, photoCropFragment, "crop_view_tag").Commit();
@@ -89,6 +92,11 @@ namespace DevenirProject
 
             if (textBitmaps.Length != 0) firebaseImageService.ProcessImages(textBitmaps);
             if (latexBitmaps.Length != 0) latexService.ProcessImages(latexBitmaps);
+            //////
+            ParsingResultFragment parsingResultFragment = new ParsingResultFragment(sourceBitmap, new string[] { "я общий", "я первый"}, new string[] { "я общий латех", "я первый латех","а я второй" });
+            Android.Support.V4.App.FragmentManager fragmentManager = SupportFragmentManager;
+            Android.Support.V4.App.FragmentTransaction fragmentTransaction = fragmentManager.BeginTransaction();
+            fragmentTransaction.Replace(Resource.Id.content_main, parsingResultFragment, "parsing_results_tag").Commit();
         }
 
         static void enableDisableViewGroup(ViewGroup viewGroup, bool enabled)
@@ -103,6 +111,29 @@ namespace DevenirProject
                     enableDisableViewGroup((ViewGroup)view, enabled);
                 }
             }
+        }
+
+        private Bitmap GetBitmap(string path)
+        {
+            byte[] imageArray = System.IO.File.ReadAllBytes(path);
+            ExifInterface exif = new ExifInterface(path);
+            int orientation = exif.GetAttributeInt(ExifInterface.TagOrientation, 1);
+            Matrix matrix = new Matrix();
+            switch (orientation)
+            {
+                case 3:
+                    matrix.PostRotate(180);
+                    break;
+                case 6:
+                    matrix.PostRotate(90);
+                    break;
+                case 8:
+                    matrix.PostRotate(270);
+                    break;
+            }
+
+            Bitmap bitmap = BitmapFactory.DecodeByteArray(imageArray, 0, imageArray.Length);
+            return Bitmap.CreateBitmap(bitmap, 0, 0, bitmap.Width, bitmap.Height, matrix, true);
         }
     }
 }
