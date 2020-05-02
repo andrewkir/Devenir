@@ -97,6 +97,8 @@ namespace DevenirProject
                 alertDialog.SetPositiveButton("Да", (sender, args) =>
                 {
                     cropView.SetPointsDefault();
+                    textModeBitmaps.Clear();
+                    LaTeXBitmaps.Clear();
                 });
                 alertDialog.SetNeutralButton("Отмена", (sender, args) => { });
                 Dialog dialog = alertDialog.Create();

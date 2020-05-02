@@ -23,8 +23,23 @@ namespace DevenirProject.WebService
     public class FirebaseImageService : ImageProcessingBaseClass
     {
         event ImageProcessing ImageDetectionEvent;
+        int imagesProcessedCount;
+        int imagesCount;
+        List<string> processedResult;
+        List<string> errors;
 
-        public override void ProcessImage(Bitmap bitmap)
+        public override void ProcessImages(Bitmap[] images)
+        {
+            imagesProcessedCount = 0;
+            processedResult = new List<string>();
+            imagesCount = images.Length;
+            foreach (var img in images)
+            {
+                ProcessImage(img, ImageResult);
+            }
+        }
+
+        public void ProcessImage(Bitmap bitmap, Action<string, string> resultAction)
         {
             try
             {
@@ -40,11 +55,11 @@ namespace DevenirProject.WebService
                 FirebaseVisionImage image = FirebaseVisionImage.FromBitmap(bitmap);
                 var result = det
                     .ProcessImage(image)
-                    .AddOnCompleteListener(new ImageDetectionListener(ImageDetectionEvent));
+                    .AddOnCompleteListener(new ImageDetectionListener(resultAction));
             }
             catch (Exception)
             {
-                ImageDetectionEvent?.Invoke(null, "Произошла непредвиденная ошибка");
+                resultAction?.Invoke(null, "Произошла непредвиденная ошибка");
             }
         }
 
@@ -53,21 +68,33 @@ namespace DevenirProject.WebService
             ImageDetectionEvent += imageDetectionResult;
         }
 
+
+        private void ImageResult(string res, string ex)
+        {
+            imagesProcessedCount++;
+            if (res != null) processedResult.Add(res);
+            if (ex != null) errors.Add(ex);
+            if (imagesProcessedCount == imagesCount)
+            {
+                ImageDetectionEvent?.Invoke(processedResult.ToArray(), errors == null ? null : errors.ToArray());
+            }
+        }
+
         class ImageDetectionListener : Java.Lang.Object, IOnCompleteListener
         {
-            ImageProcessing eventRes;
-            public ImageDetectionListener(ImageProcessing eventRes)
+            Action<string, string> imageResult;
+            public ImageDetectionListener(Action<string, string> imageResult)
             {
-                this.eventRes = eventRes;
+                this.imageResult = imageResult;
             }
             public void OnComplete(Android.Gms.Tasks.Task task)
             {
                 if (!task.IsSuccessful)
                 {
-                    eventRes?.Invoke(null, "Ошибка во время обработки изображения");
+                    imageResult?.Invoke(null, "Ошибка во время обработки изображения");
                 }
-                if (task.Result != null && ((FirebaseVisionDocumentText)task.Result).Text != null) eventRes?.Invoke(((FirebaseVisionDocumentText)task.Result).Text, null);
-                else eventRes?.Invoke(null, null);
+                if (task.Result != null && ((FirebaseVisionDocumentText)task.Result).Text != null) imageResult?.Invoke(((FirebaseVisionDocumentText)task.Result).Text, null);
+                else imageResult?.Invoke(null, null);
             }
         }
     }

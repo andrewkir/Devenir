@@ -10,6 +10,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
+using Newtonsoft.Json.Linq;
 using Org.Apache.Http;
 using Org.Json;
 using Refit;
@@ -26,7 +27,7 @@ namespace DevenirProject.Utilities.API
 
         string deviceId;
 
-        public async void LatexRecogniseRequestAsync(JSONObject body, Activity activity)
+        public async void LatexRecogniseRequestAsync(JObject body, Activity activity)
         {
             try
             {
@@ -44,6 +45,7 @@ namespace DevenirProject.Utilities.API
                     {
                         Toast.MakeText(Application.Context, "Отсутствует подключение к интернету!", ToastLength.Short).Show();
                         RequestResultEvent?.Invoke(false, null);
+                        return;
                     }
                     else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized || response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
                     {
@@ -52,7 +54,8 @@ namespace DevenirProject.Utilities.API
                     }
                     else
                     {
-                        RequestResultEvent?.Invoke(true, response);
+                        RequestResultEvent?.Invoke(true, response); 
+                        return;
                     }
                 }
                 else

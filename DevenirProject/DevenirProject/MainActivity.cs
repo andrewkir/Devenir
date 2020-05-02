@@ -39,7 +39,7 @@ namespace DevenirProject
         Button AttestateButton;
         ImageView imageview;
         Bitmap photoResult;
-        
+
         TextView text;
         SwipeRefreshLayout swipeLayout;
 
@@ -91,23 +91,34 @@ namespace DevenirProject
                 else Toast.MakeText(Application.Context, ex.Message, ToastLength.Short).Show();
             });
 
-            firebaseImageService.AddImageResultListener(delegate (string text, string ex)
+            firebaseImageService.AddImageResultListener(delegate (string[] text, string[] ex)
             {
-                if (ex == null) Toast.MakeText(Application.Context, text, ToastLength.Short).Show();
-                else if (text != null) Toast.MakeText(Application.Context, ex, ToastLength.Short).Show();
+                swipeLayout.Refreshing = false;
+                if (ex == null)
+                {
+                    foreach (var detectionResult in text)
+                    {
+                        Toast.MakeText(Application.Context, detectionResult, ToastLength.Short).Show();
+                    }
+                }
+                else if (text != null) Toast.MakeText(Application.Context, ex[0], ToastLength.Short).Show();
                 else Toast.MakeText(Application.Context, "null", ToastLength.Short).Show();
             });
 
 
-            latexService.AddOnLatexResultListener(delegate (string res, string ex)
+            latexService.AddOnLatexResultListener(delegate (string[] res, string[] ex)
             {
                 swipeLayout.Refreshing = false;
                 if (res != null)
                 {
-                    var jsonRes = new JSONObject(res);
-                    if (jsonRes.Has("latex_styled")) FindViewById<EditText>(Resource.Id.textInputEditText1).Text = jsonRes.Get("latex_styled").ToString();
+                    foreach (var detectionResult in res)
+                    {
+                        var jsonRes = new JSONObject(detectionResult);
+                        if (jsonRes.Has("latex_styled")) FindViewById<EditText>(Resource.Id.textInputEditText1).Text = jsonRes.Get("latex_styled").ToString();
+                        if (jsonRes.Has("text")) FindViewById<EditText>(Resource.Id.textInputEditText1).Text = jsonRes.Get("text").ToString();
+                    }
                 }
-                else Toast.MakeText(Application.Context, ex, ToastLength.Long).Show();
+                else Toast.MakeText(Application.Context, ex[0], ToastLength.Long).Show();
             });
 
 
@@ -137,8 +148,8 @@ namespace DevenirProject
                 if (photoResult != null)
                 {
                     swipeLayout.Refreshing = true;
-                    firebaseImageService.ProcessImage(photoResult);
-                    latexService.ProcessImage(photoResult);
+                    firebaseImageService.ProcessImages(new Bitmap[] { photoResult });
+                    //latexService.ProcessImages(new Bitmap[] { photoResult });
                 }
                 else
                 {

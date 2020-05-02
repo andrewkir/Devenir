@@ -15,9 +15,9 @@ namespace DevenirProject.Utilities.Utils
 {
     public abstract class ImageProcessingBaseClass
     {
-        public delegate void ImageProcessing(string result, string exception);
+        public delegate void ImageProcessing(string[] result, string[] exception);
         protected event ImageProcessing ImageProcessingResult;
 
-        abstract public void ProcessImage(Bitmap image);
+        abstract public void ProcessImages(Bitmap[] image);
     }
 }

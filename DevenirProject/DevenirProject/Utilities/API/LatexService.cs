@@ -14,6 +14,8 @@ using Org.Json;
 using Refit;
 using Android.Graphics;
 using DevenirProject.Utilities.Utils;
+using System.Text.Json;
+using Newtonsoft.Json.Linq;
 
 namespace DevenirProject.Utilities.API
 {
@@ -21,24 +23,28 @@ namespace DevenirProject.Utilities.API
     {
         event ImageProcessing LatexResultEvent;
         Activity activity;
-        string image;
+        List<string> images;
 
         public LatexService(Activity activity)
         {
             this.activity = activity;
         }
 
-        public override void ProcessImage(Bitmap image)
+        public override void ProcessImages(Bitmap[] images)
         {
-
-            using (var ms = new System.IO.MemoryStream())
+            this.images = new List<string>();
+            foreach (var image in images)
             {
-                image.Compress(Bitmap.CompressFormat.Jpeg, 0, ms);
-                var res = Base64.EncodeToString(ms.ToArray(), Base64Flags.Default);
-                this.image = "data:image/jpeg;base64," + res;
+                using (var ms = new System.IO.MemoryStream())
+                {
+                    image.Compress(Bitmap.CompressFormat.Jpeg, 0, ms);
+                    var res = Base64.EncodeToString(ms.ToArray(), Base64Flags.Default);
+                    this.images.Add("data:image/jpeg;base64," + res);
+                }
             }
-            JSONObject obj = new JSONObject();
-            obj.Put("src", this.image);
+
+            JObject obj = new JObject();
+            obj.Add("images", new JArray(this.images));
 
             var api = new ApiImplementation();
             api.AddOnRequestResultListener(ResultListener);
@@ -51,15 +57,15 @@ namespace DevenirProject.Utilities.API
             {
                 if (response.IsSuccessStatusCode)
                 {
-                    LatexResultEvent?.Invoke(response.Content, null);
+                    LatexResultEvent?.Invoke(ParseResponse(response.Content), null);
                 }
                 else
-                    LatexResultEvent?.Invoke(null, response.Error.Content.ToString());
+                    LatexResultEvent?.Invoke(null, new string[]{ response.Error.Content.ToString()});
             }
             else
             {
-                JSONObject obj = new JSONObject();
-                obj.Put("src", this.image);
+                JObject obj = new JObject();
+                obj.Add("images", new JArray(this.images));
 
                 var api = new ApiImplementation();
                 api.AddOnRequestResultListener(FinalResultListener);
@@ -73,20 +79,40 @@ namespace DevenirProject.Utilities.API
             {
                 if (response.IsSuccessStatusCode)
                 {
-                    LatexResultEvent?.Invoke(response.Content, null);
+                    LatexResultEvent?.Invoke(ParseResponse(response.Content), null);
                 }
                 else
-                    LatexResultEvent?.Invoke(null, response.Error.Content.ToString());
+                    LatexResultEvent?.Invoke(null, new string[] { response.Error.Content.ToString() });
             }
             else
             {
-                LatexResultEvent?.Invoke(null,"Отсутствует подключение к сервису");
+                LatexResultEvent?.Invoke(null, new string[] { "Отсутствует подключение к сервису" });
             }
         }
 
         public void AddOnLatexResultListener(ImageProcessing latexResult)
         {
             LatexResultEvent += latexResult;
+        }
+
+        private string[] ParseResponse(string response)
+        {
+            List<string> result = new List<string>();
+            JObject responseJson = JObject.Parse(response);
+            if (responseJson.ContainsKey("output"))
+            {
+                JArray imagesResponse = JArray.Parse(responseJson.GetValue("output").ToString());
+                foreach (JToken item in imagesResponse)
+                {
+                    result.Add(item.ToString());
+                }
+                return result.ToArray();
+            }
+            else
+            {
+                LatexResultEvent?.Invoke(null, new string[] { $"Проблемы на стороне сервера :(, Response:{response}" });
+                return null;
+            }
         }
     }
 }

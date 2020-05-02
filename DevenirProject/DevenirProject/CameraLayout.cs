@@ -167,8 +167,6 @@ namespace DevenirProject
             catch (Exception ex)
             {
                 Log.Debug("Camera error", ex.StackTrace);
-                //InitializeCamera();
-                //camera.Start();
             }
             base.OnResume();
         }
@@ -263,9 +261,7 @@ namespace DevenirProject
                 Display display = WindowManager.DefaultDisplay;
                 int width = display.Width;
                 int height = display.Height;
-
                 double screenRatio;
-
 
                 var orientation = base.Resources.Configuration.Orientation;
                 if (orientation == Android.Content.Res.Orientation.Portrait)
@@ -383,8 +379,6 @@ namespace DevenirProject
                     Bitmap bitmap = BitmapFactory.DecodeByteArray(image, 0, image.Length);
                     Bitmap resultImage = Bitmap.CreateBitmap(bitmap, 0, 0, bitmap.Width, bitmap.Height, matrix, true);
 
-
-
                     FileStream outStream = new FileStream(filename, FileMode.Create);
                     resultImage.Compress(Bitmap.CompressFormat.Jpeg, 90, outStream);
                     outStream.Close();
@@ -394,7 +388,6 @@ namespace DevenirProject
                     activity.SendBroadcast(mediaScanIntent);
 
                     imageResult?.Invoke(filename);
-                    Toast.MakeText(mCameraView.Context, "Pic taken", ToastLength.Short).Show();
                 }
                 catch (Exception e)
                 {
