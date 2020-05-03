@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Android;
 using Android.App;
 using Android.Content;
@@ -54,21 +55,27 @@ namespace DevenirProject
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_camera);
 
-            if (Build.VERSION.SdkInt > BuildVersionCodes.LollipopMr1) RequestPermissions(permissions, 0);
-
             toggleFlashButton = FindViewById<ImageButton>(Resource.Id.toggleFlashButton);
             takePictureButton = FindViewById<Button>(Resource.Id.takePictureButton);
             openGalleryButton = FindViewById<ImageButton>(Resource.Id.openGalleryButton);
             aspectRatioView = FindViewById<TextView>(Resource.Id.aspectRatioView);
             openDefaultCameraButton = FindViewById<ImageButton>(Resource.Id.openDefaultCamera);
 
-            InitializeCamera();
+            if (Build.VERSION.SdkInt > BuildVersionCodes.LollipopMr1)
+            {
+                if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Denied || CheckSelfPermission(Manifest.Permission.WriteExternalStorage) == Permission.Denied)
+                {
+                }
+                RequestPermissions(permissions, 0);
+            }
 
+            InitializeCamera();
             imageManager = new ImageManager();
             imageManager.AddOnImageResultListener(delegate (Bitmap bitmap, string path, Exception ex)
             {
                 if (path != null)
                 {
+                    StopCamera();
                     Intent intent = new Intent(this, typeof(MainViewActivity));
                     intent.PutExtra("image", path);
                     StartActivity(intent);
@@ -76,6 +83,7 @@ namespace DevenirProject
                 }
                 else if (ex != null)
                 {
+
                     Toast.MakeText(Application.Context, ex.Message, ToastLength.Short).Show();
                     isCameraTurnedOff = false;
                     StartCamera();
@@ -106,7 +114,6 @@ namespace DevenirProject
 
             openGalleryButton.Click += delegate
             {
-                StopCamera();
                 isCameraTurnedOff = true;
                 imageManager.PickPhoto();
             };
@@ -118,7 +125,6 @@ namespace DevenirProject
 
             openDefaultCameraButton.Click += delegate
             {
-                StopCamera();
                 isCameraTurnedOff = true;
                 imageManager.TakePhoto();
             };
@@ -143,8 +149,7 @@ namespace DevenirProject
                         lastAngle = angle;
                 }
             });
-
-            StartCamera();
+            //StartCamera();
         }
 
 
@@ -168,21 +173,34 @@ namespace DevenirProject
         {
             try
             {
-                if (!isCameraTurnedOff) StartCamera();
-                if (currentAspectRatio == -1) CalculateAndSetAspectRatio(camera);
-                else
+                if (!isCameraTurnedOff)
                 {
-                    currentAspectRatio--;
-                    ToggleAspectRatio();
-                }
+                    StartCamera();
+                    if (currentAspectRatio == -1) CalculateAndSetAspectRatio(camera);
+                    else
+                    {
+                        currentAspectRatio--;
+                        ToggleAspectRatio();
+                    }
 
-                flashCurrent--;
-                ToggleFlash();
+                    flashCurrent--;
+                    ToggleFlash();
+                }
             }
             catch (Exception ex)
             {
                 Log.Debug("Camera error", ex.StackTrace);
             }
+
+            //Ожидание открытия/закрытия камеры
+            openDefaultCameraButton.Enabled = false;
+            toggleFlashButton.Enabled = false;
+            takePictureButton.Enabled = false;
+
+            openDefaultCameraButton.PostDelayed(() => { openDefaultCameraButton.Enabled = true; }, 1000);
+            toggleFlashButton.PostDelayed(() => { toggleFlashButton.Enabled = true; }, 1000);
+            takePictureButton.PostDelayed(() => { takePictureButton.Enabled = true; }, 1000);
+
             base.OnResume();
         }
 
@@ -200,41 +218,51 @@ namespace DevenirProject
 
         private void InitializeCamera()
         {
-            if (!isCameraTurnedOff)
+            camera = FindViewById<CameraView>(Resource.Id.cameraView);
+            camera.AddCallback(new CameraViewCallback(camera, this, delegate (string path)
             {
-                camera = FindViewById<CameraView>(Resource.Id.cameraView);
-                camera.AddCallback(new CameraViewCallback(camera, this, delegate (string path)
+                if (path != null && path != "")
                 {
-                    if (path != null && path != "")
-                    {
-                        Intent intent = new Intent(this, typeof(MainViewActivity));
-                        intent.PutExtra("image", path);
-                        StartActivity(intent);
-                    }
-                    else Toast.MakeText(Application.Context, "Ошибка во время сохранения фотографии", ToastLength.Short).Show();
-                }));
-            }
+                    Intent intent = new Intent(this, typeof(MainViewActivity));
+                    intent.PutExtra("image", path);
+                    StartActivity(intent);
+                }
+                else Toast.MakeText(Application.Context, "Ошибка во время сохранения фотографии", ToastLength.Short).Show();
+            }));
         }
 
         private void StartCamera()
         {
-            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted)
+            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted && !isCameraTurnedOff)
             {
-                camera.Start();
+                try
+                {
+                    camera.Start();
+                    //Если камера была слишком быстро открыта
+                }
+                catch (Java.Lang.NullPointerException ex) { }
             }
         }
         private void StopCamera()
         {
-            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted)
+            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted && !isCameraTurnedOff)
             {
-                camera.Stop();
+                try
+                {
+                    if (camera != null && camera.IsCameraOpened) camera.Stop();
+                    //Если камера была слишком быстро открыта
+                }
+                catch (Java.Lang.NullPointerException ex) { }
             }
         }
         private void TakePicture()
         {
             if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted)
             {
-                camera.TakePicture();
+                try
+                {
+                    if(camera != null && camera.IsCameraOpened)camera.TakePicture();
+                }catch(Exception ex) { }
             }
         }
 
@@ -280,7 +308,7 @@ namespace DevenirProject
                 catch (Exception ex)
                 {
                     Toast.MakeText(Application.Context, "Ошибка во время работы со вспышкой", ToastLength.Short).Show();
-                    
+
                     toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_off_white));
                     flashCurrent = 2;
                 }
@@ -339,7 +367,6 @@ namespace DevenirProject
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
         {
             Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
-            StartCamera();
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
