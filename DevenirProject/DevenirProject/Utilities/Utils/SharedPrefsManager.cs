@@ -27,7 +27,7 @@ namespace DevenirProject.Utilities
         {
             ISharedPreferences prefs = PreferenceManager.GetDefaultSharedPreferences(Application.Context);
             string access_token = prefs.GetString("access_token", "");
-            string refresh_token = prefs.GetString("access_token", "");
+            string refresh_token = prefs.GetString("refresh_token", "");
 
             return (access_token, refresh_token);
         }

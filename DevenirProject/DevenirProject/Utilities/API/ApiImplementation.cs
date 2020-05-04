@@ -107,7 +107,7 @@ namespace DevenirProject.Utilities.API
                     }
                     else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized || response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
                     {
-                        Toast.MakeText(Application.Context, "Переаттестация! Истёк refresh token", ToastLength.Short).Show();
+                        Toast.MakeText(Application.Context, $"Переаттестация! Истёк refresh token", ToastLength.Short).Show();
                         var attest = new ApiAttestation();
                         attest.AddOnResultListener(delegate (bool res, string exception)
                         {
