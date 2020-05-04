@@ -82,7 +82,7 @@ namespace DevenirProject
                 }
 
                 cropView.SetPointsDefault();
-                Toast.MakeText(view.Context, "Успешно добавлено", ToastLength.Short).Show();
+                Toast.MakeText(view.Context, "Фрагмент добавлен", ToastLength.Short).Show();
             };
             floatingAddButton.LongClick += delegate
             {

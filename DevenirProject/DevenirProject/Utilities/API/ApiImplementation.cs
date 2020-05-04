@@ -46,7 +46,7 @@ namespace DevenirProject.Utilities.API
                     }
                     else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized || response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
                     {
-                        Toast.MakeText(Application.Context, "Обновление токенов", ToastLength.Short).Show();
+                        //Toast.MakeText(Application.Context, "Обновление токенов", ToastLength.Short).Show();
                         await RefreshTokenAsync(activity);
                     }
                     else
@@ -78,7 +78,6 @@ namespace DevenirProject.Utilities.API
             {
                 var api = RestService.For<APIService>(PATH);
                 string refresh_token = SharedPrefsManager.GetTokens().refresh_token;
-                bool success = false;
                 if (refresh_token != null && refresh_token != "")
                 {
                     var response = await api.RefreshToken("Bearer " + refresh_token, deviceId);
@@ -94,10 +93,10 @@ namespace DevenirProject.Utilities.API
                         {
                             string access_token = resp.GetString("access_token");
                             string refresh_token_new = resp.GetString("refresh_token");
-                            SharedPrefsManager.SaveTokens(access_token, null);
-                            SharedPrefsManager.SaveTokens(refresh_token_new, null);
-                            success = true;
-                            Toast.MakeText(Application.Context, "Успешное обновление access_token и refresh_token", ToastLength.Short).Show();
+                            SharedPrefsManager.SaveTokens(access_token, refresh_token_new);
+                            //Toast.MakeText(Application.Context, "Успешное обновление access_token и refresh_token", ToastLength.Short).Show();
+                            RequestResultEvent?.Invoke(true, null, null);
+                            return;
                         }
                         catch (JSONException)
                         {
@@ -107,7 +106,7 @@ namespace DevenirProject.Utilities.API
                     }
                     else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized || response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
                     {
-                        Toast.MakeText(Application.Context, $"Переаттестация! Истёк refresh token", ToastLength.Short).Show();
+                        //Toast.MakeText(Application.Context, $"Переаттестация! Истёк refresh token", ToastLength.Short).Show();
                         var attest = new ApiAttestation();
                         attest.AddOnResultListener(delegate (bool res, string exception)
                         {

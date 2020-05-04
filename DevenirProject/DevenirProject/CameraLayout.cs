@@ -470,7 +470,7 @@ namespace DevenirProject
                 catch (Exception e)
                 {
                     Log.Debug("ERROR", e.Message);
-                    Toast.MakeText(mCameraView.Context, "Error: " + e.Message, ToastLength.Short).Show();
+                    Toast.MakeText(mCameraView.Context, "Ошибка: " + e.Message, ToastLength.Short).Show();
                 }
             }
         }

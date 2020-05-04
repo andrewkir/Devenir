@@ -66,7 +66,7 @@ namespace DevenirProject
                     Toast.MakeText(view.Context, "Текст скопирован в буфер обмена", ToastLength.Short).Show();
                 }
             };
-            view.FindViewById<ImageButton>(Resource.Id.textSendContent).Click += delegate
+            view.FindViewById<ImageButton>(Resource.Id.latexSendContent).Click += delegate
             {
                 if (latex != "")
                 {

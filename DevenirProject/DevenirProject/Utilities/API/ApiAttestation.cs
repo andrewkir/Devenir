@@ -116,7 +116,7 @@ namespace DevenirProject.Utilities.API
                         string refrest_token = resp.GetString("refresh_token");
                         SharedPrefsManager.SaveTokens(access_token, refrest_token);
                         AttestationResultEvent?.Invoke(true, null);
-                        Toast.MakeText(Application.Context, "Attestated", ToastLength.Short).Show();
+                        //Toast.MakeText(Application.Context, "Attestated", ToastLength.Short).Show();
                     }
                     catch (JSONException)
                     {
