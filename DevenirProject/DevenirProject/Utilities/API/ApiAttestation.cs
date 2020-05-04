@@ -26,7 +26,7 @@ namespace DevenirProject.Utilities.API
         string timestamp;
         string device_id;
 
-        public delegate void AttestationResult(bool res);
+        public delegate void AttestationResult(bool res, string exception);
         event AttestationResult AttestationResultEvent;
 
         public async System.Threading.Tasks.Task AttestateAsync(Activity activity)
@@ -46,7 +46,7 @@ namespace DevenirProject.Utilities.API
                 var response = await api.GetNonce(obj.ToString());
                 if (response == null)
                 {
-                    Toast.MakeText(Application.Context, "Отсутствует подключение к интернету!", ToastLength.Short).Show();
+                    AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.noInternetException));
                     return;
                 }
 
@@ -61,32 +61,28 @@ namespace DevenirProject.Utilities.API
                         SafetyNetClient client = SafetyNetClass.GetClient(activity);
                         var task = client.Attest(Encoding.ASCII.GetBytes(nonce), activity.Resources.GetString(Resource.String.api_safetyNetKey))
                                          .AddOnSuccessListener(activity, new OnSuccessListener(activity, timestamp, this))
-                                         .AddOnFailureListener(activity, new OnFailureListener(this));
+                                         .AddOnFailureListener(activity, new OnFailureListener(activity, this));
                     }
                     else
                     {
-                        // Prompt user to update Google Play services.
-                        Toast.MakeText(Application.Context, "Вы должны обновить Google Play сервисы!", ToastLength.Short).Show();
-                        AttestationResultEvent?.Invoke(false);
+                        // Prompt user to update Google Play services
+                        AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.attestationGooglePlayException));
                     }
                     return;
                 }
                 else
                 {
-                    Toast.MakeText(activity, "att " + response.Error.Content, ToastLength.Long).Show();
-                    AttestationResultEvent?.Invoke(false);
+                    AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serverException));
                     return;
                 }
             }
             catch (HttpRequestException)
             {
-                Toast.MakeText(Application.Context, $"Отсутствует подключение к сервису", ToastLength.Short).Show();
-                AttestationResultEvent?.Invoke(false);
+                AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serverException));
             }
             catch (Exception ex)
             {
-                Toast.MakeText(Application.Context, $"Произошла непредвиденная ошибка " + ex.Message, ToastLength.Short).Show();
-                AttestationResultEvent?.Invoke(false);
+                AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.unexpectedException));
             }
         }
 
@@ -108,7 +104,7 @@ namespace DevenirProject.Utilities.API
                 var response = await api.CreateAccessToken(obj.ToString());
                 if (response == null)
                 {
-                    Toast.MakeText(Application.Context, "Отсутствует подключение к интернету!", ToastLength.Short).Show();
+                    AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.noInternetException));
                     return;
                 }
                 if (response.IsSuccessStatusCode)
@@ -119,43 +115,43 @@ namespace DevenirProject.Utilities.API
                         string access_token = resp.GetString("access_token");
                         string refrest_token = resp.GetString("refresh_token");
                         SharedPrefsManager.SaveTokens(access_token, refrest_token);
-                        AttestationResultEvent?.Invoke(true);
+                        AttestationResultEvent?.Invoke(true, null);
                         Toast.MakeText(Application.Context, "Attestated", ToastLength.Short).Show();
                     }
                     catch (JSONException)
                     {
-                        Toast.MakeText(Application.Context, "Ошибка сервера! Попробуйте повторить позже", ToastLength.Short).Show();
-                        AttestationResultEvent?.Invoke(false);
+                        AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serverException));
                     }
                 }
                 else
                 {
-                    Toast.MakeText(Application.Context, $"Error response {response.Content.ToString()}", ToastLength.Long).Show();
-                    AttestationResultEvent?.Invoke(false);
+                    AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serverException));
                 }
             }
             catch (HttpRequestException)
             {
-                Toast.MakeText(Application.Context, $"Отсутствует подключение к сервису", ToastLength.Short).Show();
-                AttestationResultEvent?.Invoke(false);
+                AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serviceNoConnectionException));
             }
             catch (Exception ex)
             {
-                Toast.MakeText(Application.Context, $"Произошла непредвиденная ошибка " + ex.Message, ToastLength.Short).Show();
-                AttestationResultEvent?.Invoke(false);
+                AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.unexpectedException));
             }
         }
 
 
         public class OnFailureListener : Java.Lang.Object, IOnFailureListener
         {
+            Activity activity;
             ApiAttestation sender;
-            public OnFailureListener(ApiAttestation sender) { this.sender = sender; }
+            public OnFailureListener(Activity activity, ApiAttestation sender)
+            {
+                this.activity = activity;
+                this.sender = sender;
+            }
 
             public void OnFailure(Java.Lang.Exception e)
             {
-                sender.AttestationResultEvent?.Invoke(false);
-                Toast.MakeText(Application.Context, $"Во время проверки приложения возникла ошибка", ToastLength.Long).Show();
+                sender.AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.unexpectedException));
             }
         }
 

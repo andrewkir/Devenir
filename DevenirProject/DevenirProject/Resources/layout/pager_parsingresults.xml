@@ -48,6 +48,7 @@
             android:layout_marginRight="10dp">
 
             <ImageButton
+                android:id="@+id/textCopyContent"
                 android:background="@drawable/whiteRectangle"
                 android:src="@drawable/ic_content_copy_gray"
                 style="@style/Widget.MaterialComponents.Button"
@@ -57,6 +58,7 @@
                 android:layout_alignParentTop="true"/>
 
             <ImageButton
+                android:id="@+id/textSendContent"
                 android:background="@drawable/whiteRectangle"
                 android:src="@drawable/ic_send_gray"
                 style="@style/Widget.MaterialComponents.Button"
@@ -98,6 +100,7 @@
             android:layout_marginRight="10dp">
 
             <ImageButton
+                android:id="@+id/latexCopyContent"
                 android:background="@drawable/whiteRectangle"
                 android:src="@drawable/ic_content_copy_gray"
                 style="@style/Widget.MaterialComponents.Button"
@@ -107,6 +110,7 @@
                 android:layout_alignParentTop="true"/>
 
             <ImageButton
+                android:id="@+id/latexSendContent"
                 android:background="@drawable/whiteRectangle"
                 android:src="@drawable/ic_send_gray"
                 style="@style/Widget.MaterialComponents.Button"

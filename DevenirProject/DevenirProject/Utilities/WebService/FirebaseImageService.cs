@@ -28,10 +28,19 @@ namespace DevenirProject.WebService
         List<string> processedResult;
         List<string> errors;
 
+        Activity activity;
+
+        public FirebaseImageService(Activity activity)
+        {
+            this.activity = activity;
+        }
+
         public override void ProcessImages(Bitmap[] images)
         {
             imagesProcessedCount = 0;
             processedResult = new List<string>();
+            errors = new List<string>();
+
             imagesCount = images.Length;
             foreach (var img in images)
             {
@@ -55,11 +64,11 @@ namespace DevenirProject.WebService
                 FirebaseVisionImage image = FirebaseVisionImage.FromBitmap(bitmap);
                 var result = det
                     .ProcessImage(image)
-                    .AddOnCompleteListener(new ImageDetectionListener(resultAction));
+                    .AddOnCompleteListener(new ImageDetectionListener(resultAction, activity));
             }
             catch (Exception)
             {
-                resultAction?.Invoke(null, "Произошла непредвиденная ошибка");
+                resultAction?.Invoke(null, activity.GetString(Resource.String.unexpectedException));
             }
         }
 
@@ -83,18 +92,23 @@ namespace DevenirProject.WebService
         class ImageDetectionListener : Java.Lang.Object, IOnCompleteListener
         {
             Action<string, string> imageResult;
-            public ImageDetectionListener(Action<string, string> imageResult)
+            Activity activity;
+            public ImageDetectionListener(Action<string, string> imageResult, Activity activity)
             {
                 this.imageResult = imageResult;
+                this.activity = activity;
             }
             public void OnComplete(Android.Gms.Tasks.Task task)
             {
                 if (!task.IsSuccessful)
                 {
-                    imageResult?.Invoke(null, "Ошибка во время обработки изображения");
+                    imageResult?.Invoke(null, activity.GetString(Resource.String.firebaseNoConnectionException));
                 }
-                if (task.Result != null && ((FirebaseVisionDocumentText)task.Result).Text != null) imageResult?.Invoke(((FirebaseVisionDocumentText)task.Result).Text, null);
-                else imageResult?.Invoke(null, null);
+                else
+                {
+                    if (task.Result != null && ((FirebaseVisionDocumentText)task.Result).Text != null) imageResult?.Invoke(((FirebaseVisionDocumentText)task.Result).Text, null);
+                    else imageResult?.Invoke(null, null);
+                }
             }
         }
     }

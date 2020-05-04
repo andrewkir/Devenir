@@ -18,14 +18,19 @@ using Org.Json;
 
 namespace DevenirProject
 {
-    [Activity(Label = "MainViewActivity")]
+    [Activity(Label = "MainViewActivity", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait)]
     public class MainViewActivity : Android.Support.V4.App.FragmentActivity
     {
         Bitmap sourceBitmap;
         AVLoadingIndicatorView loadingAnimation;
 
-        FirebaseImageService firebaseImageService = new FirebaseImageService();
+        FirebaseImageService firebaseImageService;
         LatexService latexService;
+
+        List<string> textParsigResults = new List<string>();
+        List<string> latexParsigResults = new List<string>();
+        int processedReady = 0;
+        int processNums = 0;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -34,9 +39,10 @@ namespace DevenirProject
 
             string path;
             path = Intent.GetStringExtra("image");
-            if(path != null && path!="") sourceBitmap = GetBitmap(path);
+            if (path != null && path != "") sourceBitmap = GetBitmap(path);
 
             latexService = new LatexService(this);
+            firebaseImageService = new FirebaseImageService(this);
             loadingAnimation = FindViewById<AVLoadingIndicatorView>(Resource.Id.loadingAnimation);
 
             PhotoCropFragment photoCropFragment = new PhotoCropFragment(sourceBitmap, ProcessBitmaps);
@@ -46,15 +52,20 @@ namespace DevenirProject
 
             firebaseImageService.AddImageResultListener(delegate (string[] text, string[] ex)
             {
-                if (ex == null)
+                if (ex == null || ex.Length == 0)
                 {
+                    List<string> tmpRes = new List<string>();
                     foreach (var detectionResult in text)
                     {
-                        Toast.MakeText(Application.Context, detectionResult, ToastLength.Short).Show();
+                        tmpRes.Add(detectionResult);
                     }
+                    textParsigResults.Add(string.Join('\n', tmpRes.ToArray()));
+                    textParsigResults.AddRange(tmpRes);
                 }
-                else if (text != null) Toast.MakeText(Application.Context, ex[0], ToastLength.Short).Show();
+                else if (ex.Length > 0) Toast.MakeText(Application.Context, ex[0], ToastLength.Short).Show();
                 else Toast.MakeText(Application.Context, "null", ToastLength.Short).Show();
+                processedReady++;
+                ProcessedReady();
             });
 
 
@@ -62,14 +73,25 @@ namespace DevenirProject
             {
                 if (res != null)
                 {
+                    List<string> tmpRes = new List<string>();
                     foreach (var detectionResult in res)
                     {
                         var jsonRes = new JSONObject(detectionResult);
-                        if (jsonRes.Has("latex_styled")) Toast.MakeText(Application.Context, jsonRes.Get("latex_styled").ToString(), ToastLength.Short).Show();
-                        if (jsonRes.Has("text")) Toast.MakeText(Application.Context, jsonRes.Get("text").ToString(), ToastLength.Short).Show(); ;
+                        if (jsonRes.Has("latex_styled"))
+                        {
+                            tmpRes.Add(jsonRes.Get("latex_styled").ToString());
+                        }
+                        else if (jsonRes.Has("text"))
+                        {
+                            tmpRes.Add(jsonRes.Get("text").ToString());
+                        }
                     }
+                    latexParsigResults.Add(string.Join('\n', tmpRes.ToArray()));
+                    latexParsigResults.AddRange(tmpRes);
                 }
-                else Toast.MakeText(Application.Context, ex[0], ToastLength.Long).Show();
+                else Toast.MakeText(Application.Context, ex[0], ToastLength.Short).Show();
+                processedReady++;
+                ProcessedReady();
             });
         }
 
@@ -83,20 +105,50 @@ namespace DevenirProject
             loadingAnimation.Hide();
         }
 
+        void ProcessedReady()
+        {
+            if (processedReady == processNums)
+            {
+                Android.Support.V4.App.Fragment currentFragment = SupportFragmentManager.FindFragmentByTag("crop_view_tag");
+                StopLoading();
+                if (textParsigResults.Count == 0 && latexParsigResults.Count == 0)
+                {
+                    enableDisableViewGroup((currentFragment.View as ViewGroup), true);
+                }
+                else
+                {
+                    ParsingResultFragment parsingResultFragment = new ParsingResultFragment(sourceBitmap, textParsigResults.ToArray(), latexParsigResults.ToArray());
+                    Android.Support.V4.App.FragmentManager fragmentManager = SupportFragmentManager;
+                    Android.Support.V4.App.FragmentTransaction fragmentTransaction = fragmentManager.BeginTransaction();
+                    fragmentTransaction.Replace(Resource.Id.content_main, parsingResultFragment, "parsing_results_tag").Commit();
+                }
+            }
+        }
+
         void ProcessBitmaps(Bitmap[] textBitmaps, Bitmap[] latexBitmaps)
         {
-            Android.Support.V4.App.Fragment currentFragment = SupportFragmentManager.FindFragmentByTag("crop_view_tag");
+            if (textBitmaps.Length == 0 && latexBitmaps.Length == 0)
+            {
+                StopLoading();
+                Toast.MakeText(this, "Вы ещё не выбрали фрагментов для анализа!", ToastLength.Short).Show();
+            }
+            else
+            {
+                Android.Support.V4.App.Fragment currentFragment = SupportFragmentManager.FindFragmentByTag("crop_view_tag");
+                enableDisableViewGroup((currentFragment.View as ViewGroup), false);
+                ShowLoading();
 
-            //enableDisableViewGroup((currentFragment.View as ViewGroup), false);
-            //ShowLoading();
-
-            if (textBitmaps.Length != 0) firebaseImageService.ProcessImages(textBitmaps);
-            if (latexBitmaps.Length != 0) latexService.ProcessImages(latexBitmaps);
-            //////
-            ParsingResultFragment parsingResultFragment = new ParsingResultFragment(sourceBitmap, new string[] { "я общий", "я первый"}, new string[] { "я общий латех", "я первый латех","а я второй" });
-            Android.Support.V4.App.FragmentManager fragmentManager = SupportFragmentManager;
-            Android.Support.V4.App.FragmentTransaction fragmentTransaction = fragmentManager.BeginTransaction();
-            fragmentTransaction.Replace(Resource.Id.content_main, parsingResultFragment, "parsing_results_tag").Commit();
+                if (textBitmaps.Length != 0)
+                {
+                    processNums++;
+                    firebaseImageService.ProcessImages(textBitmaps);
+                }
+                if (latexBitmaps.Length != 0)
+                {
+                    processNums++;
+                    latexService.ProcessImages(latexBitmaps);
+                }
+            }
         }
 
         static void enableDisableViewGroup(ViewGroup viewGroup, bool enabled)

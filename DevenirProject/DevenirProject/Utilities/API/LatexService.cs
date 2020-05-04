@@ -51,7 +51,7 @@ namespace DevenirProject.Utilities.API
             api.LatexRecogniseRequestAsync(obj, activity);
         }
 
-        private void ResultListener(bool result, ApiResponse<string> response)
+        private void ResultListener(bool result, ApiResponse<string> response, string exception)
         {
             if (result && response != null)
             {
@@ -73,7 +73,7 @@ namespace DevenirProject.Utilities.API
             }
         }
 
-        private void FinalResultListener(bool result, ApiResponse<string> response)
+        private void FinalResultListener(bool result, ApiResponse<string> response, string exception)
         {
             if (result && response != null)
             {
@@ -86,7 +86,7 @@ namespace DevenirProject.Utilities.API
             }
             else
             {
-                LatexResultEvent?.Invoke(null, new string[] { "Отсутствует подключение к сервису" });
+                LatexResultEvent?.Invoke(null, new string[] { exception });
             }
         }
 

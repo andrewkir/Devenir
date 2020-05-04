@@ -34,6 +34,8 @@ namespace DevenirProject
             pager = view.FindViewById<ViewPager>(Resource.Id.pager);
             tabLayout = view.FindViewById<TabLayout>(Resource.Id.tabDots);
             tabLayout.SetupWithViewPager(pager, true);
+            tabLayout.TabRippleColor = null;
+
 
             var adapter = new PagesAdapter(FragmentManager, Math.Max(textBitmaps.Length, latexBitmaps.Length), textBitmaps, latexBitmaps);
             pager.Adapter = adapter;
@@ -51,7 +53,7 @@ namespace DevenirProject
 
             public PagesAdapter(Android.Support.V4.App.FragmentManager fragmentManager, int maxFragments, string[] textBitmaps, string[] latexBitmaps) : base(fragmentManager)
             {
-                this.maxFragments = maxFragments;
+                this.maxFragments = maxFragments == 2 ? 1 : maxFragments;
                 this.textProcessed = textBitmaps;
                 this.latexProcessed = latexBitmaps;
             }

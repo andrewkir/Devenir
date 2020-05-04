@@ -1,8 +1,19 @@
 <resources>
-    <string name="app_name">DevenirProject</string>
-    <string name="action_settings">Settings</string>
+  <string name="app_name">Devenir</string>
 
   <string name="chooseArea">Выберите область для распознавания</string>
   <string name="text">Текст</string>
   <string name="latex">LaTeX</string>
+
+  <string name="latexNoConnectionException">Отсутствует подключение к сервису анализа LaTeX фрагментов</string>
+  <string name="firebaseNoConnectionException">Отсутствует подключение к сервису анализа текстовых фрагментов</string>
+  <string name="serviceNoConnectionException">Отсутствует подключение к сервису</string>
+
+  <string name="noInternetException">Отсутствует подключение к интернету</string>
+  <string name="latexServerException">Ошибка на стороне LaTeX сервиса, попробуйте повторить позже</string>
+  <string name="firebaseServerException">Ошибка на стороне сервиса анализа текста, попробуйте повторить позже</string>
+  <string name="attestationGooglePlayException">"Вам необходимо обновить Google Play сервисы!"</string>
+
+  <string name="unexpectedException">Произошла непредвиденная ошибка</string>
+  <string name="serverException">Ошибка на стороне сервера </string>
 </resources>

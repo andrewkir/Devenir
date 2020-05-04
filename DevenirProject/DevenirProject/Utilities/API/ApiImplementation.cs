@@ -22,7 +22,7 @@ namespace DevenirProject.Utilities.API
     {
         const string PATH = "https://devenir.andrewkir.ru";
 
-        public delegate void RequestResult(bool result, ApiResponse<string> response);
+        public delegate void RequestResult(bool result, ApiResponse<string> response, string error);
         event RequestResult RequestResultEvent;
 
         string deviceId;
@@ -36,15 +36,12 @@ namespace DevenirProject.Utilities.API
                 ApiResponse<string> response = null;
                 var api = RestService.For<APIService>(PATH);
                 string access_token = SharedPrefsManager.GetTokens().access_token;
-                Toast.MakeText(Application.Context, $"Токен не пустой? {access_token == ""}", ToastLength.Short).Show();
                 if (access_token != null && access_token != "")
                 {
-                    Toast.MakeText(Application.Context, access_token, ToastLength.Short);
                     response = await api.GetImageProcess(body.ToString(), "Bearer " + access_token, deviceId);
                     if (response == null)
                     {
-                        Toast.MakeText(Application.Context, "Отсутствует подключение к интернету!", ToastLength.Short).Show();
-                        RequestResultEvent?.Invoke(false, null);
+                        RequestResultEvent?.Invoke(false, null, activity.GetString(Resource.String.noInternetException));
                         return;
                     }
                     else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized || response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
@@ -54,7 +51,7 @@ namespace DevenirProject.Utilities.API
                     }
                     else
                     {
-                        RequestResultEvent?.Invoke(true, response); 
+                        RequestResultEvent?.Invoke(true, response, null); 
                         return;
                     }
                 }
@@ -65,14 +62,12 @@ namespace DevenirProject.Utilities.API
             }
             catch (HttpRequestException)
             {
-                Toast.MakeText(Application.Context, $"Отсутствует подключение к сервису", ToastLength.Short).Show();
-                RequestResultEvent?.Invoke(false, null);
+                RequestResultEvent?.Invoke(false, null, activity.GetString(Resource.String.latexNoConnectionException));
                 return;
             }
             catch (Exception ex)
             {
-                Toast.MakeText(Application.Context, $"Произошла непредвиденная ошибка " + ex.Message, ToastLength.Short).Show();
-                RequestResultEvent?.Invoke(false, null);
+                RequestResultEvent?.Invoke(false, null, activity.GetString(Resource.String.unexpectedException));
                 return;
             }
         }
@@ -89,7 +84,7 @@ namespace DevenirProject.Utilities.API
                     var response = await api.RefreshToken("Bearer " + refresh_token, deviceId);
                     if (response == null)
                     {
-                        Toast.MakeText(Application.Context, "Отсутствует подключение к интернету!", ToastLength.Short).Show();
+                        RequestResultEvent?.Invoke(false, null, activity.GetString(Resource.String.noInternetException));
                         return;
                     }
                     if (response.IsSuccessStatusCode)
@@ -106,40 +101,40 @@ namespace DevenirProject.Utilities.API
                         }
                         catch (JSONException)
                         {
-                            Toast.MakeText(Application.Context, "Ошибка сервера! Попробуйте повторить позже", ToastLength.Short).Show();
+                            RequestResultEvent?.Invoke(false, null, activity.GetString(Resource.String.latexServerException));
+                            return;
                         }
                     }
                     else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized || response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
                     {
                         Toast.MakeText(Application.Context, "Переаттестация! Истёк refresh token", ToastLength.Short).Show();
                         var attest = new ApiAttestation();
-                        attest.AddOnResultListener(delegate (bool res)
+                        attest.AddOnResultListener(delegate (bool res, string exception)
                         {
-                            if (res) RequestResultEvent?.Invoke(res, null);
+                            if (res) RequestResultEvent?.Invoke(res, null, null);
+                            else RequestResultEvent?.Invoke(res, null, exception);
                         });
                         await attest.AttestateAsync(activity);
                     }
                 }
                 else
                 {
-                    Toast.MakeText(Application.Context, "Переаттестация! Пустой refresh token", ToastLength.Short).Show();
                     var attest = new ApiAttestation();
-                    attest.AddOnResultListener(delegate (bool res)
+                    attest.AddOnResultListener(delegate (bool res, string exception)
                     {
-                        if (res) RequestResultEvent?.Invoke(res, null);
+                        if (res) RequestResultEvent?.Invoke(res, null, null);
+                        else RequestResultEvent?.Invoke(res, null, exception);
                     });
                     await attest.AttestateAsync(activity);
                 }
             }
             catch (HttpRequestException)
             {
-                Toast.MakeText(Application.Context, $"Отсутствует подключение к сервису", ToastLength.Short).Show();
-                RequestResultEvent?.Invoke(false, null);
+                RequestResultEvent?.Invoke(false, null, activity.GetString(Resource.String.latexNoConnectionException));
             }
             catch (Exception ex)
             {
-                Toast.MakeText(Application.Context, $"Произошла непредвиденная ошибка " + ex.Message, ToastLength.Short).Show();
-                RequestResultEvent?.Invoke(false, null);
+                RequestResultEvent?.Invoke(false, null, activity.GetString(Resource.String.latexNoConnectionException));
             }
         }
 

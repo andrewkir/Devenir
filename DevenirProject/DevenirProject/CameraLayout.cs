@@ -22,7 +22,7 @@ using Java.IO;
 
 namespace DevenirProject
 {
-    [Activity(Label = "Devenir", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait, MainLauncher = true)]
+    [Activity(Label = "Devenir",Icon = "@mipmap/ic_launcher", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait, MainLauncher = true)]
     public class CameraLayout : Activity
     {
         OrientationListener orientationListener;
@@ -63,9 +63,6 @@ namespace DevenirProject
 
             if (Build.VERSION.SdkInt > BuildVersionCodes.LollipopMr1)
             {
-                if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Denied || CheckSelfPermission(Manifest.Permission.WriteExternalStorage) == Permission.Denied)
-                {
-                }
                 RequestPermissions(permissions, 0);
             }
 
@@ -149,7 +146,6 @@ namespace DevenirProject
                         lastAngle = angle;
                 }
             });
-            //StartCamera();
         }
 
 
@@ -196,10 +192,12 @@ namespace DevenirProject
             openDefaultCameraButton.Enabled = false;
             toggleFlashButton.Enabled = false;
             takePictureButton.Enabled = false;
+            aspectRatioView.Enabled = false;
 
             openDefaultCameraButton.PostDelayed(() => { openDefaultCameraButton.Enabled = true; }, 1000);
             toggleFlashButton.PostDelayed(() => { toggleFlashButton.Enabled = true; }, 1000);
             takePictureButton.PostDelayed(() => { takePictureButton.Enabled = true; }, 1000);
+            aspectRatioView.PostDelayed(() => { aspectRatioView.Enabled = true; }, 1000);
 
             base.OnResume();
         }

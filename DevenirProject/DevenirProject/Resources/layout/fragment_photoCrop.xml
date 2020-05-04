@@ -4,13 +4,12 @@
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:paddingBottom="5dp"
     android:layout_height="match_parent">
-
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <LinearLayout
-            android:paddingBottom="10dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
@@ -30,8 +29,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"/>
             <LinearLayout
-                android:layout_marginTop="30dp"
-                android:layout_marginBottom="20dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="50dp"
                 android:layout_alignParentBottom="true"
                 android:layout_centerHorizontal="true"
                 android:orientation="horizontal"
@@ -63,7 +62,7 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
             android:layout_marginRight="15dp"
-            android:layout_marginBottom="15dp"/>
+            android:layout_marginBottom="20dp"/>
         <android.support.design.widget.FloatingActionButton
             android:src="@drawable/ic_add_white"
             android:id="@+id/floatingAddButton"
@@ -72,6 +71,6 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
             android:layout_marginLeft="15dp"
-            android:layout_marginBottom="15dp"/>
+            android:layout_marginBottom="20dp"/>
     </RelativeLayout>
 </android.support.design.widget.CoordinatorLayout>
