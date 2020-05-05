@@ -210,7 +210,6 @@
   <ItemGroup>
     <AndroidResource Include="Resources\drawable\ic_camera_white.xml" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <AndroidResource Include="Resources\drawable\ic_add_white.xml" />
   </ItemGroup>

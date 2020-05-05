@@ -22,7 +22,7 @@ using Java.IO;
 
 namespace DevenirProject
 {
-    [Activity(Label = "Devenir",Icon = "@mipmap/ic_launcher", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait, MainLauncher = true)]
+    [Activity(Label = "Devenir", Icon = "@mipmap/ic_launcher", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait, MainLauncher = true)]
     public class CameraLayout : Activity
     {
         OrientationListener orientationListener;
@@ -54,6 +54,10 @@ namespace DevenirProject
             SetTheme(Resource.Style.AppThemeClearStatusBar);
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_camera);
+            if (Resources.Configuration.Orientation == Android.Content.Res.Orientation.Landscape)
+            {
+                RequestedOrientation = ScreenOrientation.Portrait;
+            }
 
             toggleFlashButton = FindViewById<ImageButton>(Resource.Id.toggleFlashButton);
             takePictureButton = FindViewById<Button>(Resource.Id.takePictureButton);
@@ -123,6 +127,7 @@ namespace DevenirProject
             openDefaultCameraButton.Click += delegate
             {
                 isCameraTurnedOff = true;
+                StopCamera();
                 imageManager.TakePhoto();
             };
 
@@ -259,8 +264,9 @@ namespace DevenirProject
             {
                 try
                 {
-                    if(camera != null && camera.IsCameraOpened)camera.TakePicture();
-                }catch(Exception ex) { }
+                    if (camera != null && camera.IsCameraOpened) camera.TakePicture();
+                }
+                catch (Exception ex) { }
             }
         }
 
@@ -320,8 +326,17 @@ namespace DevenirProject
                 if (camera != null)
                 {
                     AspectRatio[] ratios = camera.SupportedAspectRatios.ToArray();
-                    camera.AspectRatio = ratios[(++currentAspectRatio) % ratios.Length];
-                    aspectRatioView.Text = camera.AspectRatio.ToString();
+                    currentAspectRatio++;
+                    if (currentAspectRatio == ratios.Length) currentAspectRatio = 0;
+                    try
+                    {
+                        camera.AspectRatio = ratios[currentAspectRatio];
+                        aspectRatioView.Text = camera.AspectRatio.ToString();
+                    }
+                    catch (Exception ex)
+                    {
+                        ToggleAspectRatio();
+                    }
                 }
             }
         }
@@ -439,22 +454,26 @@ namespace DevenirProject
                 {
                     //Handling screen rotation
                     Matrix matrix = new Matrix();
+                    Bitmap bitmap = BitmapFactory.DecodeByteArray(image, 0, image.Length);
+
+                    //У некоторых телефонов по умолчанию фото повёрнуто на 90 градусов
+                    if (bitmap.Width >= bitmap.Height) { matrix.PostRotate(90); }
+
                     switch (activity.lastAngle)
                     {
                         case 0:
-                            matrix.PostRotate(90);
-                            break;
-                        case -90:
-                            matrix.PostRotate(180);
-                            break;
-                        case 180:
-                            matrix.PostRotate(270);
-                            break;
-                        case 90:
                             matrix.PostRotate(0);
                             break;
+                        case -90:
+                            matrix.PostRotate(90);
+                            break;
+                        case 180:
+                            matrix.PostRotate(180);
+                            break;
+                        case 90:
+                            matrix.PostRotate(270);
+                            break;
                     }
-                    Bitmap bitmap = BitmapFactory.DecodeByteArray(image, 0, image.Length);
                     Bitmap resultImage = Bitmap.CreateBitmap(bitmap, 0, 0, bitmap.Width, bitmap.Height, matrix, true);
 
                     FileStream outStream = new FileStream(filename, FileMode.Create);
