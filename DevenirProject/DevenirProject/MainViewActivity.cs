@@ -89,7 +89,7 @@ namespace DevenirProject
                     latexParsigResults.Add(string.Join('\n', tmpRes.ToArray()));
                     latexParsigResults.AddRange(tmpRes);
                 }
-                else Toast.MakeText(Application.Context, ex[0], ToastLength.Short).Show();
+                else if(ex[0] != null) Toast.MakeText(Application.Context, ex[0], ToastLength.Short).Show();
                 processedReady++;
                 ProcessedReady();
             });

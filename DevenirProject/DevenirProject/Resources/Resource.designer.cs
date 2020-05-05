@@ -4741,52 +4741,46 @@ namespace DevenirProject
 			public const int latexServerException = 2131558479;
 			
 			// aapt resource value: 0x7F0D0050
-			public const int mathpix_id = 2131558480;
+			public const int mtrl_chip_close_icon_content_description = 2131558480;
 			
 			// aapt resource value: 0x7F0D0051
-			public const int mathpix_key = 2131558481;
+			public const int noInternetException = 2131558481;
 			
 			// aapt resource value: 0x7F0D0052
-			public const int mtrl_chip_close_icon_content_description = 2131558482;
+			public const int password_toggle_content_description = 2131558482;
 			
 			// aapt resource value: 0x7F0D0053
-			public const int noInternetException = 2131558483;
+			public const int path_password_eye = 2131558483;
 			
 			// aapt resource value: 0x7F0D0054
-			public const int password_toggle_content_description = 2131558484;
+			public const int path_password_eye_mask_strike_through = 2131558484;
 			
 			// aapt resource value: 0x7F0D0055
-			public const int path_password_eye = 2131558485;
+			public const int path_password_eye_mask_visible = 2131558485;
 			
 			// aapt resource value: 0x7F0D0056
-			public const int path_password_eye_mask_strike_through = 2131558486;
+			public const int path_password_strike_through = 2131558486;
 			
 			// aapt resource value: 0x7F0D0057
-			public const int path_password_eye_mask_visible = 2131558487;
+			public const int project_id = 2131558487;
 			
 			// aapt resource value: 0x7F0D0058
-			public const int path_password_strike_through = 2131558488;
+			public const int search_menu_title = 2131558488;
 			
 			// aapt resource value: 0x7F0D0059
-			public const int project_id = 2131558489;
+			public const int serverException = 2131558489;
 			
 			// aapt resource value: 0x7F0D005A
-			public const int search_menu_title = 2131558490;
+			public const int serviceNoConnectionException = 2131558490;
 			
 			// aapt resource value: 0x7F0D005B
-			public const int serverException = 2131558491;
+			public const int status_bar_notification_info_overflow = 2131558491;
 			
 			// aapt resource value: 0x7F0D005C
-			public const int serviceNoConnectionException = 2131558492;
+			public const int text = 2131558492;
 			
 			// aapt resource value: 0x7F0D005D
-			public const int status_bar_notification_info_overflow = 2131558493;
-			
-			// aapt resource value: 0x7F0D005E
-			public const int text = 2131558494;
-			
-			// aapt resource value: 0x7F0D005F
-			public const int unexpectedException = 2131558495;
+			public const int unexpectedException = 2131558493;
 			
 			static String()
 			{
