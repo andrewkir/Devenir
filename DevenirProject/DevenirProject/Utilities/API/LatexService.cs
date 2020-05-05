@@ -60,7 +60,7 @@ namespace DevenirProject.Utilities.API
                     LatexResultEvent?.Invoke(ParseResponse(response.Content), null);
                 }
                 else
-                    LatexResultEvent?.Invoke(null, new string[]{ response.Error.Content.ToString()});
+                    LatexResultEvent?.Invoke(null, new string[]{ activity.GetString(Resource.String.latexServerException) });
             }
             else
             {
@@ -82,7 +82,7 @@ namespace DevenirProject.Utilities.API
                     LatexResultEvent?.Invoke(ParseResponse(response.Content), null);
                 }
                 else
-                    LatexResultEvent?.Invoke(null, new string[] { response.Error.Content.ToString() });
+                    LatexResultEvent?.Invoke(null, new string[] { activity.GetString(Resource.String.latexServerException) });
             }
             else
             {

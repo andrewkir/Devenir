@@ -62,7 +62,7 @@ namespace DevenirProject
                     textParsigResults.Add(string.Join('\n', tmpRes.ToArray()));
                     textParsigResults.AddRange(tmpRes);
                 }
-                else if (ex.Length > 0) Toast.MakeText(Application.Context, ex[0], ToastLength.Short).Show();
+                else if (ex.Length > 0) Toast.MakeText(Application.Context, $"Ошибка: {ex[0]}", ToastLength.Short).Show();
                 else Toast.MakeText(Application.Context, "null", ToastLength.Short).Show();
                 processedReady++;
                 ProcessedReady();
@@ -89,7 +89,7 @@ namespace DevenirProject
                     latexParsigResults.Add(string.Join('\n', tmpRes.ToArray()));
                     latexParsigResults.AddRange(tmpRes);
                 }
-                else if(ex[0] != null) Toast.MakeText(Application.Context, ex[0], ToastLength.Short).Show();
+                else if(ex[0] != null) Toast.MakeText(Application.Context, $"Ошибка: {ex[0]}", ToastLength.Short).Show();
                 processedReady++;
                 ProcessedReady();
             });
