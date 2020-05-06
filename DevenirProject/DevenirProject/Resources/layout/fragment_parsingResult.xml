@@ -1,11 +1,12 @@
-<ScrollView
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_height="match_parent"
-    android:layout_width="match_parent">
-
+    android:fitsSystemWindows="true"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -26,14 +27,14 @@
                 android:layout_marginTop="50dp"
                 android:adjustViewBounds="true"
                 android:background="@drawable/round_outline"/>
-
             <android.support.v4.view.ViewPager
+                android:nestedScrollingEnabled="true"
                 android:layout_marginTop="30dp"
                 android:id="@+id/pager"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 android:layout_width="match_parent"
-                android:layout_height="350dp">
+                android:layout_height="350dp"/>
 
-            </android.support.v4.view.ViewPager>
             <android.support.design.widget.TabLayout
                 android:clickable="false"
                 app:tabMode="fixed"
@@ -47,4 +48,4 @@
                 app:tabIndicatorHeight="0dp"/>
         </LinearLayout>
     </RelativeLayout>
-</ScrollView>
+</android.support.v4.widget.NestedScrollView>

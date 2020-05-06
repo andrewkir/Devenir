@@ -12,6 +12,8 @@ using Android.Content.Res;
 using Android.Graphics;
 using Android.OS;
 using Android.Runtime;
+using Android.Support.V4.App;
+using Android.Support.V4.Content;
 using Android.Util;
 using Android.Views;
 using Android.Views.Animations;
@@ -54,6 +56,12 @@ namespace DevenirProject
             SetTheme(Resource.Style.AppThemeClearStatusBar);
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_camera);
+
+            //CrashLytics
+            //Fabric.Fabric.With(this, new Crashlytics.Crashlytics());
+            //Crashlytics.Crashlytics.HandleManagedExceptions();
+
+
             if (Resources.Configuration.Orientation == Android.Content.Res.Orientation.Landscape)
             {
                 RequestedOrientation = ScreenOrientation.Portrait;
@@ -64,11 +72,6 @@ namespace DevenirProject
             openGalleryButton = FindViewById<ImageButton>(Resource.Id.openGalleryButton);
             aspectRatioView = FindViewById<TextView>(Resource.Id.aspectRatioView);
             openDefaultCameraButton = FindViewById<ImageButton>(Resource.Id.openDefaultCamera);
-
-            if (Build.VERSION.SdkInt > BuildVersionCodes.LollipopMr1)
-            {
-                RequestPermissions(permissions, 0);
-            }
 
             InitializeCamera();
             imageManager = new ImageManager();
@@ -174,18 +177,21 @@ namespace DevenirProject
         {
             try
             {
-                if (!isCameraTurnedOff)
+                if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.Camera) == Permission.Granted)
                 {
-                    StartCamera();
-                    if (currentAspectRatio == -1) CalculateAndSetAspectRatio(camera);
-                    else
+                    if (!isCameraTurnedOff)
                     {
-                        currentAspectRatio--;
-                        ToggleAspectRatio();
+                        StartCamera();
+                        //if (currentAspectRatio == -1) CalculateAndSetAspectRatio(camera);
+                        //else
+                        //{
+                        //    currentAspectRatio--;
+                        //}
                     }
-
-                    flashCurrent--;
-                    ToggleFlash();
+                }
+                else
+                {
+                    RequestPermissions(permissions, 0);
                 }
             }
             catch (Exception ex)
@@ -221,17 +227,21 @@ namespace DevenirProject
 
         private void InitializeCamera()
         {
-            camera = FindViewById<CameraView>(Resource.Id.cameraView);
-            camera.AddCallback(new CameraViewCallback(camera, this, delegate (string path)
+            try
             {
-                if (path != null && path != "")
+                camera = FindViewById<CameraView>(Resource.Id.cameraView);
+                camera.AddCallback(new CameraViewCallback(camera, this, delegate (string path)
                 {
-                    Intent intent = new Intent(this, typeof(MainViewActivity));
-                    intent.PutExtra("image", path);
-                    StartActivity(intent);
-                }
-                else Toast.MakeText(Application.Context, "Ошибка во время сохранения фотографии", ToastLength.Short).Show();
-            }));
+                    if (path != null && path != "")
+                    {
+                        Intent intent = new Intent(this, typeof(MainViewActivity));
+                        intent.PutExtra("image", path);
+                        StartActivity(intent);
+                    }
+                    else Toast.MakeText(Application.Context, "Ошибка во время сохранения фотографии", ToastLength.Short).Show();
+                }));
+            }
+            catch (Exception ex) { }
         }
 
         private void StartCamera()
@@ -325,13 +335,21 @@ namespace DevenirProject
             {
                 if (camera != null)
                 {
-                    AspectRatio[] ratios = camera.SupportedAspectRatios.ToArray();
+                    List<AspectRatio> ratios = camera.SupportedAspectRatios.ToList();
+                    currentAspectRatio = ratios.FindIndex(elem => elem == camera.AspectRatio);
                     currentAspectRatio++;
-                    if (currentAspectRatio == ratios.Length) currentAspectRatio = 0;
+
+                    if (currentAspectRatio >= ratios.Count) currentAspectRatio = 0;
                     try
                     {
-                        camera.AspectRatio = ratios[currentAspectRatio];
-                        aspectRatioView.Text = camera.AspectRatio.ToString();
+                        if (ratios[currentAspectRatio] != null)
+                        {
+                            camera.AspectRatio = ratios[currentAspectRatio];
+                            aspectRatioView.Text = camera.AspectRatio.ToString();
+                            StopCamera();
+                            InitializeCamera();
+                            StartCamera();
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -370,10 +388,32 @@ namespace DevenirProject
                 int index = ratiosValues
                     .Select((n, i) => new { index = i, value = n })
                     .OrderBy(item => item.value)
+                    .Where(item => item != null)
                     .First().index;
-                camera.AspectRatio = ratios[index];
-                currentAspectRatio = index;
-                aspectRatioView.Text = camera.AspectRatio.ToString();
+                List<string> tmp = new List<string>();
+                foreach (var item in ratios)
+                {
+                    if (item != null) tmp.Add(item.ToString());
+                }
+                Toast.MakeText(ApplicationContext, $"{string.Join(' ', tmp.ToArray())} length = {ratios.Length}, index = {index}", ToastLength.Short).Show();
+                try
+                {
+                    if (ratios[index] != null)
+                    {
+                        camera.PostDelayed(() =>
+                        {
+                            camera.AspectRatio = ratios[index];
+                            currentAspectRatio = index;
+                            aspectRatioView.Text = camera.AspectRatio.ToString();
+                        }, 1000);
+
+                    }
+                    else
+                    {
+                        Toast.MakeText(ApplicationContext, "ОШИБКА УХАДИ", ToastLength.Short).Show();
+                    }
+                }
+                catch (Exception ex) { }
             }
         }
 

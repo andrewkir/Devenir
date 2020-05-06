@@ -4641,146 +4641,149 @@ namespace DevenirProject
 			// aapt resource value: 0x7F0D002E
 			public const int chooseArea = 2131558446;
 			
-			// aapt resource value: 0x7F0D002F
-			public const int common_google_play_services_enable_button = 2131558447;
-			
 			// aapt resource value: 0x7F0D0030
-			public const int common_google_play_services_enable_text = 2131558448;
+			public const int common_google_play_services_enable_button = 2131558448;
 			
 			// aapt resource value: 0x7F0D0031
-			public const int common_google_play_services_enable_title = 2131558449;
+			public const int common_google_play_services_enable_text = 2131558449;
 			
 			// aapt resource value: 0x7F0D0032
-			public const int common_google_play_services_install_button = 2131558450;
+			public const int common_google_play_services_enable_title = 2131558450;
 			
 			// aapt resource value: 0x7F0D0033
-			public const int common_google_play_services_install_text = 2131558451;
+			public const int common_google_play_services_install_button = 2131558451;
 			
 			// aapt resource value: 0x7F0D0034
-			public const int common_google_play_services_install_title = 2131558452;
+			public const int common_google_play_services_install_text = 2131558452;
 			
 			// aapt resource value: 0x7F0D0035
-			public const int common_google_play_services_notification_channel_name = 2131558453;
+			public const int common_google_play_services_install_title = 2131558453;
 			
 			// aapt resource value: 0x7F0D0036
-			public const int common_google_play_services_notification_ticker = 2131558454;
+			public const int common_google_play_services_notification_channel_name = 2131558454;
 			
 			// aapt resource value: 0x7F0D0037
-			public const int common_google_play_services_unknown_issue = 2131558455;
+			public const int common_google_play_services_notification_ticker = 2131558455;
 			
 			// aapt resource value: 0x7F0D0038
-			public const int common_google_play_services_unsupported_text = 2131558456;
+			public const int common_google_play_services_unknown_issue = 2131558456;
 			
 			// aapt resource value: 0x7F0D0039
-			public const int common_google_play_services_update_button = 2131558457;
+			public const int common_google_play_services_unsupported_text = 2131558457;
 			
 			// aapt resource value: 0x7F0D003A
-			public const int common_google_play_services_update_text = 2131558458;
+			public const int common_google_play_services_update_button = 2131558458;
 			
 			// aapt resource value: 0x7F0D003B
-			public const int common_google_play_services_update_title = 2131558459;
+			public const int common_google_play_services_update_text = 2131558459;
 			
 			// aapt resource value: 0x7F0D003C
-			public const int common_google_play_services_updating_text = 2131558460;
+			public const int common_google_play_services_update_title = 2131558460;
 			
 			// aapt resource value: 0x7F0D003D
-			public const int common_google_play_services_wear_update_text = 2131558461;
+			public const int common_google_play_services_updating_text = 2131558461;
 			
 			// aapt resource value: 0x7F0D003E
-			public const int common_open_on_phone = 2131558462;
+			public const int common_google_play_services_wear_update_text = 2131558462;
 			
 			// aapt resource value: 0x7F0D003F
-			public const int common_signin_button_text = 2131558463;
+			public const int common_open_on_phone = 2131558463;
 			
 			// aapt resource value: 0x7F0D0040
-			public const int common_signin_button_text_long = 2131558464;
+			public const int common_signin_button_text = 2131558464;
 			
 			// aapt resource value: 0x7F0D0041
-			public const int default_web_client_id = 2131558465;
+			public const int common_signin_button_text_long = 2131558465;
+			
+			// aapt resource value: 0x7F0D002F
+			public const int com_crashlytics_android_build_id = 2131558447;
 			
 			// aapt resource value: 0x7F0D0042
-			public const int fab_transformation_scrim_behavior = 2131558466;
+			public const int default_web_client_id = 2131558466;
 			
 			// aapt resource value: 0x7F0D0043
-			public const int fab_transformation_sheet_behavior = 2131558467;
+			public const int fab_transformation_scrim_behavior = 2131558467;
 			
 			// aapt resource value: 0x7F0D0044
-			public const int firebaseNoConnectionException = 2131558468;
+			public const int fab_transformation_sheet_behavior = 2131558468;
 			
 			// aapt resource value: 0x7F0D0045
-			public const int firebaseServerException = 2131558469;
+			public const int firebaseNoConnectionException = 2131558469;
 			
 			// aapt resource value: 0x7F0D0046
-			public const int firebase_database_url = 2131558470;
+			public const int firebaseServerException = 2131558470;
 			
 			// aapt resource value: 0x7F0D0047
-			public const int gcm_defaultSenderId = 2131558471;
+			public const int firebase_database_url = 2131558471;
 			
 			// aapt resource value: 0x7F0D0048
-			public const int google_api_key = 2131558472;
+			public const int gcm_defaultSenderId = 2131558472;
 			
 			// aapt resource value: 0x7F0D0049
-			public const int google_app_id = 2131558473;
+			public const int google_api_key = 2131558473;
 			
 			// aapt resource value: 0x7F0D004A
-			public const int google_crash_reporting_api_key = 2131558474;
+			public const int google_app_id = 2131558474;
 			
 			// aapt resource value: 0x7F0D004B
-			public const int google_storage_bucket = 2131558475;
+			public const int google_crash_reporting_api_key = 2131558475;
 			
 			// aapt resource value: 0x7F0D004C
-			public const int hide_bottom_view_on_scroll_behavior = 2131558476;
+			public const int google_storage_bucket = 2131558476;
 			
 			// aapt resource value: 0x7F0D004D
-			public const int latex = 2131558477;
+			public const int hide_bottom_view_on_scroll_behavior = 2131558477;
 			
 			// aapt resource value: 0x7F0D004E
-			public const int latexNoConnectionException = 2131558478;
+			public const int latex = 2131558478;
 			
 			// aapt resource value: 0x7F0D004F
-			public const int latexServerException = 2131558479;
+			public const int latexNoConnectionException = 2131558479;
 			
 			// aapt resource value: 0x7F0D0050
-			public const int mtrl_chip_close_icon_content_description = 2131558480;
+			public const int latexServerException = 2131558480;
 			
 			// aapt resource value: 0x7F0D0051
-			public const int noInternetException = 2131558481;
+			public const int mtrl_chip_close_icon_content_description = 2131558481;
 			
 			// aapt resource value: 0x7F0D0052
-			public const int password_toggle_content_description = 2131558482;
+			public const int noInternetException = 2131558482;
 			
 			// aapt resource value: 0x7F0D0053
-			public const int path_password_eye = 2131558483;
+			public const int password_toggle_content_description = 2131558483;
 			
 			// aapt resource value: 0x7F0D0054
-			public const int path_password_eye_mask_strike_through = 2131558484;
+			public const int path_password_eye = 2131558484;
 			
 			// aapt resource value: 0x7F0D0055
-			public const int path_password_eye_mask_visible = 2131558485;
+			public const int path_password_eye_mask_strike_through = 2131558485;
 			
 			// aapt resource value: 0x7F0D0056
-			public const int path_password_strike_through = 2131558486;
+			public const int path_password_eye_mask_visible = 2131558486;
 			
 			// aapt resource value: 0x7F0D0057
-			public const int project_id = 2131558487;
+			public const int path_password_strike_through = 2131558487;
 			
 			// aapt resource value: 0x7F0D0058
-			public const int search_menu_title = 2131558488;
+			public const int project_id = 2131558488;
 			
 			// aapt resource value: 0x7F0D0059
-			public const int serverException = 2131558489;
+			public const int search_menu_title = 2131558489;
 			
 			// aapt resource value: 0x7F0D005A
-			public const int serviceNoConnectionException = 2131558490;
+			public const int serverException = 2131558490;
 			
 			// aapt resource value: 0x7F0D005B
-			public const int status_bar_notification_info_overflow = 2131558491;
+			public const int serviceNoConnectionException = 2131558491;
 			
 			// aapt resource value: 0x7F0D005C
-			public const int text = 2131558492;
+			public const int status_bar_notification_info_overflow = 2131558492;
 			
 			// aapt resource value: 0x7F0D005D
-			public const int unexpectedException = 2131558493;
+			public const int text = 2131558493;
+			
+			// aapt resource value: 0x7F0D005E
+			public const int unexpectedException = 2131558494;
 			
 			static String()
 			{
