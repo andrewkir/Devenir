@@ -444,7 +444,7 @@ namespace DevenirProject
                 catch (Exception e)
                 {
                     Log.Debug("ERROR", e.Message);
-                    Toast.MakeText(activity, "Ошибка: " + e.Message, ToastLength.Short).Show();
+                    imageResult?.Invoke(null);
                 }
             }
         }
