@@ -5,6 +5,8 @@
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:fitsSystemWindows="true"
+    android:fillViewport="true"
+    android:layout_gravity="fill_vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
     <RelativeLayout
@@ -36,8 +38,7 @@
                 android:layout_height="350dp"/>
 
             <android.support.design.widget.TabLayout
-                android:clickable="false"
-                app:tabMode="fixed"
+                android:background="?android:colorBackground"
                 android:layout_marginTop="10dp"
                 android:id="@+id/tabDots"
                 android:layout_alignParentBottom="true"

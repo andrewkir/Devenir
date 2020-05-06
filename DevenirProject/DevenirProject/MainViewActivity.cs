@@ -18,7 +18,7 @@ using Org.Json;
 
 namespace DevenirProject
 {
-    [Activity(Label = "MainViewActivity", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait)]
+    [Activity(Label = "MainViewActivity", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait, WindowSoftInputMode = SoftInput.AdjustResize)]
     public class MainViewActivity : Android.Support.V4.App.FragmentActivity
     {
         Bitmap sourceBitmap;

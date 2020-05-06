@@ -115,8 +115,7 @@ namespace DevenirProject
 
             toggleFlashButton.Click += delegate
             {
-                //ToggleFlash();
-                Crashlytics.Crashlytics.Instance.Crash();
+                ToggleFlash();
             };
 
             openGalleryButton.Click += delegate
