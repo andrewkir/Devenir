@@ -59,8 +59,8 @@ namespace DevenirProject
             SetContentView(Resource.Layout.activity_camera);
 
             //CrashLytics
-            //Fabric.Fabric.With(this, new Crashlytics.Crashlytics());
-            //Crashlytics.Crashlytics.HandleManagedExceptions();
+            Fabric.Fabric.With(this, new Crashlytics.Crashlytics());
+            Crashlytics.Crashlytics.HandleManagedExceptions();
 
             RequestPermissions(permissions, 0);
 
@@ -115,7 +115,8 @@ namespace DevenirProject
 
             toggleFlashButton.Click += delegate
             {
-                ToggleFlash();
+                //ToggleFlash();
+                Crashlytics.Crashlytics.Instance.Crash();
             };
 
             openGalleryButton.Click += delegate
