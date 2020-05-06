@@ -274,6 +274,7 @@ namespace DevenirProject
                     StartActivity(intent);
                 }
                 else Toast.MakeText(Application.Context, "Ошибка во время сохранения фотографии", ToastLength.Short).Show();
+                StartCamera();
             }));
         }
 
