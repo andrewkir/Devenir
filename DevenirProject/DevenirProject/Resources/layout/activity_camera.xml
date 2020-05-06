@@ -7,28 +7,13 @@
     android:fitsSystemWindows="true"
     android:background="#292929"
     android:layout_height="match_parent">
-    <com.google.android.cameraview.CameraView
+    <FrameLayout
         android:id="@+id/cameraView"
         android:fitsSystemWindows="true"
         android:layout_width="match_parent"
         android:adjustViewBounds="true"
-        app:aspectRatio="4:3"
         android:layout_gravity="center"
         android:layout_height="wrap_content"/>
-    <TextView
-        android:background="@drawable/circle"
-        android:id="@+id/aspectRatioView"
-        android:gravity="center"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:layout_gravity="left"
-        android:layout_marginLeft="30dp"
-        android:layout_marginTop="20dp"
-        android:textColor="@android:color/white"
-        android:text="4:3"
-        android:clickable="true"
-        android:textSize="20sp"/>
     <ImageButton
         android:background="@drawable/circle"
         android:id="@+id/openDefaultCamera"

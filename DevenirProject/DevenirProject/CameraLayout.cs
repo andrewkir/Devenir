@@ -18,8 +18,9 @@ using Android.Util;
 using Android.Views;
 using Android.Views.Animations;
 using Android.Widget;
-using Com.Google.Android.Cameraview;
+using DevenirProject.CameraUtils;
 using DevenirProject.ImageUtils;
+using Java.Interop;
 using Java.IO;
 
 namespace DevenirProject
@@ -29,18 +30,18 @@ namespace DevenirProject
     {
         OrientationListener orientationListener;
 
-        CameraView camera;
+        Android.Hardware.Camera camera;
+        CameraPreview preview;
+        FrameLayout cameraPreview;
 
         public ImageButton toggleFlashButton;
         Button takePictureButton;
         ImageButton openDefaultCameraButton;
         ImageButton openGalleryButton;
-        TextView aspectRatioView;
 
         ImageManager imageManager;
 
-        int flashCurrent = CameraView.FlashAuto;
-        int currentAspectRatio = -1;
+        int flashCurrent = -1;
         int lastAngle = 0;
         bool isCameraTurnedOff = false;
 
@@ -61,6 +62,7 @@ namespace DevenirProject
             //Fabric.Fabric.With(this, new Crashlytics.Crashlytics());
             //Crashlytics.Crashlytics.HandleManagedExceptions();
 
+            RequestPermissions(permissions, 0);
 
             if (Resources.Configuration.Orientation == Android.Content.Res.Orientation.Landscape)
             {
@@ -70,10 +72,10 @@ namespace DevenirProject
             toggleFlashButton = FindViewById<ImageButton>(Resource.Id.toggleFlashButton);
             takePictureButton = FindViewById<Button>(Resource.Id.takePictureButton);
             openGalleryButton = FindViewById<ImageButton>(Resource.Id.openGalleryButton);
-            aspectRatioView = FindViewById<TextView>(Resource.Id.aspectRatioView);
             openDefaultCameraButton = FindViewById<ImageButton>(Resource.Id.openDefaultCamera);
 
-            InitializeCamera();
+            cameraPreview = FindViewById<FrameLayout>(Resource.Id.cameraView);
+
             imageManager = new ImageManager();
             imageManager.AddOnImageResultListener(delegate (Bitmap bitmap, string path, Exception ex)
             {
@@ -122,11 +124,6 @@ namespace DevenirProject
                 imageManager.PickPhoto();
             };
 
-            aspectRatioView.Click += delegate
-            {
-                ToggleAspectRatio();
-            };
-
             openDefaultCameraButton.Click += delegate
             {
                 isCameraTurnedOff = true;
@@ -147,7 +144,6 @@ namespace DevenirProject
                     toggleFlashButton.Animate().Rotation(angle).Start();
                     openGalleryButton.Animate().Rotation(angle).Start();
                     openDefaultCameraButton.Animate().Rotation(angle).Start();
-                    aspectRatioView.Animate().Rotation(angle).Start();
                     if (angle == -180)
                         lastAngle = 180;
                     else
@@ -161,16 +157,13 @@ namespace DevenirProject
         protected override void OnSaveInstanceState(Bundle outState)
         {
             outState.PutInt("CURRENT_FLASH_MODE", flashCurrent);
-            outState.PutInt("CURRENT_ASPECT_RATIO", currentAspectRatio);
             base.OnSaveInstanceState(outState);
         }
 
         protected override void OnRestoreInstanceState(Bundle savedInstanceState)
         {
             base.OnRestoreInstanceState(savedInstanceState);
-
-            flashCurrent = savedInstanceState.GetInt("CURRENT_FLASH_MODE", CameraView.FlashAuto);
-            currentAspectRatio = savedInstanceState.GetInt("CURRENT_ASPECT_RATIO", -1);
+            flashCurrent = savedInstanceState.GetInt("CURRENT_FLASH_MODE", -1);
         }
 
         protected override void OnResume()
@@ -179,19 +172,7 @@ namespace DevenirProject
             {
                 if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.Camera) == Permission.Granted)
                 {
-                    if (!isCameraTurnedOff)
-                    {
-                        StartCamera();
-                        //if (currentAspectRatio == -1) CalculateAndSetAspectRatio(camera);
-                        //else
-                        //{
-                        //    currentAspectRatio--;
-                        //}
-                    }
-                }
-                else
-                {
-                    RequestPermissions(permissions, 0);
+                    StartCamera();
                 }
             }
             catch (Exception ex)
@@ -203,14 +184,18 @@ namespace DevenirProject
             openDefaultCameraButton.Enabled = false;
             toggleFlashButton.Enabled = false;
             takePictureButton.Enabled = false;
-            aspectRatioView.Enabled = false;
 
-            openDefaultCameraButton.PostDelayed(() => { openDefaultCameraButton.Enabled = true; }, 1000);
-            toggleFlashButton.PostDelayed(() => { toggleFlashButton.Enabled = true; }, 1000);
-            takePictureButton.PostDelayed(() => { takePictureButton.Enabled = true; }, 1000);
-            aspectRatioView.PostDelayed(() => { aspectRatioView.Enabled = true; }, 1000);
+            openDefaultCameraButton.PostDelayed(() => { openDefaultCameraButton.Enabled = true; }, 500);
+            toggleFlashButton.PostDelayed(() => { toggleFlashButton.Enabled = true; }, 500);
+            takePictureButton.PostDelayed(() => { takePictureButton.Enabled = true; }, 500);
 
             base.OnResume();
+        }
+
+        protected override void OnPause()
+        {
+            StopCamera();
+            base.OnPause();
         }
 
         protected override void OnStart()
@@ -225,198 +210,131 @@ namespace DevenirProject
             base.OnStop();
         }
 
-        private void InitializeCamera()
-        {
-            try
-            {
-                camera = FindViewById<CameraView>(Resource.Id.cameraView);
-                camera.AddCallback(new CameraViewCallback(camera, this, delegate (string path)
-                {
-                    if (path != null && path != "")
-                    {
-                        Intent intent = new Intent(this, typeof(MainViewActivity));
-                        intent.PutExtra("image", path);
-                        StartActivity(intent);
-                    }
-                    else Toast.MakeText(Application.Context, "Ошибка во время сохранения фотографии", ToastLength.Short).Show();
-                }));
-            }
-            catch (Exception ex) { }
-        }
-
         private void StartCamera()
         {
-            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted && !isCameraTurnedOff)
+            if (camera != null)
             {
                 try
                 {
-                    camera.Start();
-                    //Если камера была слишком быстро открыта
+                    camera.StartPreview();
+                    return;
                 }
-                catch (Java.Lang.NullPointerException ex) { }
+                catch (Java.Lang.Exception e)
+                {
+                }
+            }
+
+            try
+            {
+                camera = CameraHelpers.getCameraInstance();
+                flashCurrent--;
+                ToggleFlash();
+
+                if (camera == null)
+                {
+                    //showAlert("Can not connect to camera.");
+                }
+                else
+                {
+                    preview = new CameraPreview(this, camera);
+                    cameraPreview.RemoveAllViews();
+                    cameraPreview.AddView(preview);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Debug("Camera activity", e.StackTrace);
             }
         }
         private void StopCamera()
         {
-            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted && !isCameraTurnedOff)
+            if (camera != null)
             {
                 try
                 {
-                    if (camera != null && camera.IsCameraOpened) camera.Stop();
-                    //Если камера была слишком быстро открыта
+                    camera.SetPreviewCallback(null);
+                    preview.Holder.RemoveCallback(preview);
+                    camera.Release();
                 }
-                catch (Java.Lang.NullPointerException ex) { }
+                catch (Exception e)
+                {
+                    Log.Debug("Camera activity", e.StackTrace);
+                }
             }
         }
         private void TakePicture()
         {
-            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted)
+            if (camera == null) return;
+            camera.TakePicture(null, null, new CameraPictureCallback(this, delegate (string path)
             {
-                try
+                if (path != null && path != "")
                 {
-                    if (camera != null && camera.IsCameraOpened) camera.TakePicture();
+                    Intent intent = new Intent(this, typeof(MainViewActivity));
+                    intent.PutExtra("image", path);
+                    StartActivity(intent);
                 }
-                catch (Exception ex) { }
-            }
-        }
-
-        protected override void OnPause()
-        {
-            try
-            {
-                if (camera != null)
-                {
-                    StopCamera();
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Debug("Camera error", ex.StackTrace);
-            }
-            base.OnPause();
+                else Toast.MakeText(Application.Context, "Ошибка во время сохранения фотографии", ToastLength.Short).Show();
+            }));
         }
 
         private void ToggleFlash()
         {
             if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted)
             {
-                try
+                var cameraParams = camera.GetParameters();
+                List<string> supportedParams = cameraParams.SupportedFlashModes.ToList();
+                if (supportedParams.Count > 0)
                 {
-                    flashCurrent = (flashCurrent + 1) % 3;
-                    switch (flashCurrent)
+                    if (flashCurrent < 0)
                     {
-                        case 0:
-                            camera.Flash = CameraView.FlashAuto;
-                            toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_auto_white));
-                            break;
-                        case 1:
-                            camera.Flash = CameraView.FlashOn;
-                            toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_on_white));
-                            break;
-                        case 2:
-                            camera.Flash = CameraView.FlashOff;
-                            toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_off_white));
-                            break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Toast.MakeText(Application.Context, "Ошибка во время работы со вспышкой", ToastLength.Short).Show();
-
-                    toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_off_white));
-                    flashCurrent = 2;
-                }
-            }
-        }
-
-        private void ToggleAspectRatio()
-        {
-            if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted)
-            {
-                if (camera != null)
-                {
-                    List<AspectRatio> ratios = camera.SupportedAspectRatios.ToList();
-                    currentAspectRatio = ratios.FindIndex(elem => elem == camera.AspectRatio);
-                    currentAspectRatio++;
-
-                    if (currentAspectRatio >= ratios.Count) currentAspectRatio = 0;
-                    try
-                    {
-                        if (ratios[currentAspectRatio] != null)
+                        int index = supportedParams.ToList().FindLastIndex(flash => flash == Android.Hardware.Camera.Parameters.FlashModeAuto);
+                        if (index == -1)
                         {
-                            camera.AspectRatio = ratios[currentAspectRatio];
-                            aspectRatioView.Text = camera.AspectRatio.ToString();
-                            StopCamera();
-                            InitializeCamera();
-                            StartCamera();
+                            cameraParams.FlashMode = supportedParams[0];
+                            flashCurrent = 0;
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        ToggleAspectRatio();
-                    }
-                }
-            }
-        }
-
-        private void CalculateAndSetAspectRatio(CameraView camera)
-        {
-            if (camera != null)
-            {
-                Display display = WindowManager.DefaultDisplay;
-                int width = display.Width;
-                int height = display.Height;
-                double screenRatio;
-
-                var orientation = base.Resources.Configuration.Orientation;
-                if (orientation == Android.Content.Res.Orientation.Portrait)
-                {
-                    screenRatio = (double)height / width;
-                }
-                else
-                {
-                    screenRatio = (double)width / height;
-                }
-
-                AspectRatio[] ratios = camera.SupportedAspectRatios.ToArray();
-                List<double> ratiosValues = new List<double>();
-                foreach (var ratio in ratios)
-                {
-                    ratiosValues.Add(Math.Abs((double)ratio.GetX() / ratio.GetY() - screenRatio));
-                }
-
-                int index = ratiosValues
-                    .Select((n, i) => new { index = i, value = n })
-                    .OrderBy(item => item.value)
-                    .Where(item => item != null)
-                    .First().index;
-                List<string> tmp = new List<string>();
-                foreach (var item in ratios)
-                {
-                    if (item != null) tmp.Add(item.ToString());
-                }
-                Toast.MakeText(ApplicationContext, $"{string.Join(' ', tmp.ToArray())} length = {ratios.Length}, index = {index}", ToastLength.Short).Show();
-                try
-                {
-                    if (ratios[index] != null)
-                    {
-                        camera.PostDelayed(() =>
+                        else
                         {
-                            camera.AspectRatio = ratios[index];
-                            currentAspectRatio = index;
-                            aspectRatioView.Text = camera.AspectRatio.ToString();
-                        }, 1000);
-
+                            cameraParams.FlashMode = supportedParams[index];
+                            flashCurrent = index;
+                        }
                     }
                     else
                     {
-                        Toast.MakeText(ApplicationContext, "ОШИБКА УХАДИ", ToastLength.Short).Show();
+                        int index = (flashCurrent + 1) % supportedParams.Count;
+                        cameraParams.FlashMode = supportedParams[index];
+                        flashCurrent = index;
+                    }
+                    if (cameraParams.FlashMode == Android.Hardware.Camera.Parameters.FlashModeOn ||
+                        cameraParams.FlashMode == Android.Hardware.Camera.Parameters.FlashModeAuto ||
+                        cameraParams.FlashMode == Android.Hardware.Camera.Parameters.FlashModeOff)
+                    {
+                        camera.SetParameters(cameraParams);
+                    }
+                    else
+                    {
+                        ToggleFlash();
+                        return;
                     }
                 }
-                catch (Exception ex) { }
+
+                switch (cameraParams.FlashMode)
+                {
+                    case Android.Hardware.Camera.Parameters.FlashModeAuto:
+                        toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_auto_white));
+                        break;
+                    case Android.Hardware.Camera.Parameters.FlashModeOn:
+                        toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_on_white));
+                        break;
+                    case Android.Hardware.Camera.Parameters.FlashModeOff:
+                        toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_off_white));
+                        break;
+                    default:
+                        toggleFlashButton.SetImageDrawable(GetDrawable(Resource.Drawable.ic_flash_off_white));
+                        break;
+                }
             }
         }
-
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
         {
             Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -462,21 +380,18 @@ namespace DevenirProject
         }
 
 
-        class CameraViewCallback : CameraView.Callback
+        class CameraPictureCallback : Java.Lang.Object, Android.Hardware.Camera.IPictureCallback
         {
-
-            private CameraView mCameraView;
             private CameraLayout activity;
             private Action<string> imageResult;
 
-            public CameraViewCallback(CameraView mCameraView, CameraLayout activity, Action<string> imageResult)
+            public CameraPictureCallback(CameraLayout activity, Action<string> imageResult)
             {
-                this.mCameraView = mCameraView;
                 this.activity = activity;
                 this.imageResult = imageResult;
             }
 
-            public override void OnPictureTaken(CameraView camera, byte[] image)
+            public void OnPictureTaken(byte[] image, Android.Hardware.Camera camera)
             {
                 var path = System.IO.Path.Combine(Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryPictures).AbsolutePath, "Devenir");
 
@@ -529,7 +444,7 @@ namespace DevenirProject
                 catch (Exception e)
                 {
                     Log.Debug("ERROR", e.Message);
-                    Toast.MakeText(mCameraView.Context, "Ошибка: " + e.Message, ToastLength.Short).Show();
+                    Toast.MakeText(activity, "Ошибка: " + e.Message, ToastLength.Short).Show();
                 }
             }
         }

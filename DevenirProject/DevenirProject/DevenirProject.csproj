@@ -71,6 +71,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CameraLayout.cs" />
+    <Compile Include="CameraUtils\CameraPreview.cs" />
+    <Compile Include="CameraUtils\CameraHelpers.cs" />
+    <Compile Include="CameraUtils\DisplayHelpers.cs" />
     <Compile Include="InnerParsingResultsFragment.cs" />
     <Compile Include="MainViewActivity.cs" />
     <Compile Include="ParsingResultFragment.cs" />
@@ -124,9 +127,6 @@
     </AndroidResource>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Naxam.CameraView.Droid">
-      <Version>0.0.3.1</Version>
-    </PackageReference>
     <PackageReference Include="Refit">
       <Version>5.1.67</Version>
     </PackageReference>
