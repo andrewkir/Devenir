@@ -14,6 +14,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
+using DevenirProject.Utilities.Helpers;
 using Org.Json;
 using Refit;
 using static Android.Provider.Settings;
@@ -33,7 +34,7 @@ namespace DevenirProject.Utilities.API
         {
             try
             {
-                var api = RestService.For<APIService>("https://devenir.andrewkir.ru");
+                var api = RestService.For<ApiService>("https://devenir.andrewkir.ru");
                 JSONObject obj = new JSONObject();
 
                 timestamp = DateTime.Now.Ticks.ToString();
@@ -72,13 +73,13 @@ namespace DevenirProject.Utilities.API
                 }
                 else
                 {
-                    AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serverException));
+                    AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serverException) + $"failed with nonce");
                     return;
                 }
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException ex)
             {
-                AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serverException));
+                AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serverException) + $"https exception {ex}");
             }
             catch (Exception ex)
             {
@@ -95,7 +96,7 @@ namespace DevenirProject.Utilities.API
         {
             try
             {
-                var api = RestService.For<APIService>("https://devenir.andrewkir.ru");
+                var api = RestService.For<ApiService>("https://devenir.andrewkir.ru");
                 JSONObject obj = new JSONObject();
                 obj.Put("safetynet", res);
                 obj.Put("timestamp", timestamp);
@@ -119,12 +120,12 @@ namespace DevenirProject.Utilities.API
                     }
                     catch (JSONException)
                     {
-                        AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serverException));
+                        AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serverException) + $" json parsing error {response.Content}");
                     }
                 }
                 else
                 {
-                    AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serverException));
+                    AttestationResultEvent?.Invoke(false, activity.GetString(Resource.String.serverException) + $" attestation error {response.Content} {response.Error.Content}");
                 }
             }
             catch (HttpRequestException)

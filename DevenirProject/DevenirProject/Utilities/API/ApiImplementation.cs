@@ -10,6 +10,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
+using DevenirProject.Utilities.Helpers;
 using Newtonsoft.Json.Linq;
 using Org.Apache.Http;
 using Org.Json;
@@ -34,7 +35,7 @@ namespace DevenirProject.Utilities.API
                 deviceId = Secure.GetString(activity.ContentResolver, Secure.AndroidId);
 
                 ApiResponse<string> response = null;
-                var api = RestService.For<APIService>(PATH);
+                var api = RestService.For<ApiService>(PATH);
                 string access_token = SharedPrefsManager.GetTokens().access_token;
                 if (access_token != null && access_token != "")
                 {
@@ -76,7 +77,7 @@ namespace DevenirProject.Utilities.API
         {
             try
             {
-                var api = RestService.For<APIService>(PATH);
+                var api = RestService.For<ApiService>(PATH);
                 string refresh_token = SharedPrefsManager.GetTokens().refresh_token;
                 if (refresh_token != null && refresh_token != "")
                 {

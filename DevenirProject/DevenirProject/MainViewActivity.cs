@@ -13,7 +13,7 @@ using Android.Views;
 using Android.Widget;
 using Com.Wang.Avi;
 using DevenirProject.Utilities.API;
-using DevenirProject.WebService;
+using DevenirProject.Utilities.FirebaseService;
 using Org.Json;
 
 namespace DevenirProject
@@ -25,7 +25,7 @@ namespace DevenirProject
         AVLoadingIndicatorView loadingAnimation;
 
         FirebaseImageService firebaseImageService;
-        LatexService latexService;
+        LatexApiService latexService;
 
         List<string> textParsigResults = new List<string>();
         List<string> latexParsigResults = new List<string>();
@@ -41,7 +41,7 @@ namespace DevenirProject
             path = Intent.GetStringExtra("image");
             if (path != null && path != "") sourceBitmap = GetBitmap(path);
 
-            latexService = new LatexService(this);
+            latexService = new LatexApiService(this);
             firebaseImageService = new FirebaseImageService(this);
             loadingAnimation = FindViewById<AVLoadingIndicatorView>(Resource.Id.loadingAnimation);
 
@@ -117,7 +117,7 @@ namespace DevenirProject
                 }
                 else
                 {
-                    ParsingResultFragment parsingResultFragment = new ParsingResultFragment(sourceBitmap, textParsigResults.ToArray(), latexParsigResults.ToArray());
+                    ParsingResultsFragment parsingResultFragment = new ParsingResultsFragment(sourceBitmap, textParsigResults.ToArray(), latexParsigResults.ToArray());
                     Android.Support.V4.App.FragmentManager fragmentManager = SupportFragmentManager;
                     Android.Support.V4.App.FragmentTransaction fragmentTransaction = fragmentManager.BeginTransaction();
                     fragmentTransaction.Replace(Resource.Id.content_main, parsingResultFragment, "parsing_results_tag").Commit();

@@ -15,7 +15,7 @@ using Refit;
 
 namespace DevenirProject.Utilities.API
 {
-    public interface APIService
+    public interface ApiService
     {
         [Post("/latex")]
         [Headers("Content-Type: application/json")]

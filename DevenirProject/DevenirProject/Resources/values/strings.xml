@@ -12,7 +12,7 @@
   <string name="noInternetException">Отсутствует подключение к интернету</string>
   <string name="latexServerException">Ошибка на стороне LaTeX сервиса, попробуйте повторить позже</string>
   <string name="firebaseServerException">Ошибка на стороне сервиса анализа текста, попробуйте повторить позже</string>
-  <string name="attestationGooglePlayException">"Вам необходимо обновить Google Play сервисы!"</string>
+  <string name="attestationGooglePlayException">Вам необходимо обновить Google Play сервисы!</string>
 
   <string name="unexpectedException">Произошла непредвиденная ошибка</string>
   <string name="serverException">Ошибка на стороне сервера </string>

@@ -70,24 +70,24 @@
     <Reference Include="System.Numerics.Vectors" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CameraLayout.cs" />
-    <Compile Include="CameraUtils\CameraPreview.cs" />
-    <Compile Include="CameraUtils\CameraHelpers.cs" />
-    <Compile Include="CameraUtils\DisplayHelpers.cs" />
-    <Compile Include="InnerParsingResultsFragment.cs" />
+    <Compile Include="CameraLayoutActivity.cs" />
+    <Compile Include="Views\CameraPreview.cs" />
+    <Compile Include="Utilities\CameraUtilities\CameraHelpers.cs" />
+    <Compile Include="Utilities\CameraUtilities\DisplayHelpers.cs" />
+    <Compile Include="ParsingDetailsResultsFragment.cs" />
     <Compile Include="MainViewActivity.cs" />
-    <Compile Include="ParsingResultFragment.cs" />
+    <Compile Include="ParsingResultsFragment.cs" />
     <Compile Include="PhotoCropFragment.cs" />
     <Compile Include="Utilities\API\ApiImplementation.cs" />
-    <Compile Include="Utilities\API\APIService.cs" />
+    <Compile Include="Utilities\API\ApiService.cs" />
     <Compile Include="Utilities\API\ApiAttestation.cs" />
-    <Compile Include="Utilities\API\LatexService.cs" />
-    <Compile Include="Utilities\ImageUtils\ImageManager.cs" />
+    <Compile Include="Utilities\API\LatexApiService.cs" />
+    <Compile Include="Utilities\Helpers\ImageManager.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utilities\Utils\ImageProcessingBaseClass.cs" />
-    <Compile Include="Utilities\Utils\SharedPrefsManager.cs" />
-    <Compile Include="Utilities\WebService\FirebaseImageService.cs" />
+    <Compile Include="Utilities\Helpers\ImageProcessingBaseClass.cs" />
+    <Compile Include="Utilities\Helpers\SharedPrefsManager.cs" />
+    <Compile Include="Utilities\FirebaseService\FirebaseImageService.cs" />
     <Compile Include="Views\MultiPointCropView.cs" />
     <Compile Include="Views\Point.cs" />
   </ItemGroup>
@@ -260,6 +260,7 @@
       <SubType>Designer</SubType>
     </AndroidResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>
