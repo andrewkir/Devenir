@@ -138,7 +138,7 @@ namespace DevenirProject.Views
         {
             RequestLayout();
             srcBitmap = bitmap;
-            image = scaleBitmapAndKeepRation(bitmap, Math.Abs(Height - 2 * (int)points[0].radius - PaddingTop - PaddingBottom), Math.Abs(Width - 2 * (int)points[0].radius - PaddingLeft - PaddingRight));
+            image = ScaleBitmapAndKeepRation(bitmap, Math.Abs(Height - 2 * (int)points[0].radius - PaddingTop - PaddingBottom), Math.Abs(Width - 2 * (int)points[0].radius - PaddingLeft - PaddingRight));
 
             widthDiff = (float)bitmap.Width / image.Width;
             heightDiff = (float)bitmap.Height / image.Height;
@@ -261,7 +261,7 @@ namespace DevenirProject.Views
             }
             return false;
         }
-        public static Bitmap scaleBitmapAndKeepRation(Bitmap targetBmp, int reqHeightInPixels, int reqWidthInPixels)
+        public static Bitmap ScaleBitmapAndKeepRation(Bitmap targetBmp, int reqHeightInPixels, int reqWidthInPixels)
         {
             Matrix matrix = new Matrix();
             matrix.SetRectToRect(new RectF(0, 0, targetBmp.Width, targetBmp.Height), new RectF(0, 0, reqWidthInPixels, reqHeightInPixels), Matrix.ScaleToFit.Center);

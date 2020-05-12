@@ -113,7 +113,7 @@ namespace DevenirProject
                 StopLoading();
                 if (textParsigResults.Count == 0 && latexParsigResults.Count == 0)
                 {
-                    enableDisableViewGroup((currentFragment.View as ViewGroup), true);
+                    EnableDisableViewGroup((currentFragment.View as ViewGroup), true);
                 }
                 else
                 {
@@ -135,7 +135,7 @@ namespace DevenirProject
             else
             {
                 Android.Support.V4.App.Fragment currentFragment = SupportFragmentManager.FindFragmentByTag("crop_view_tag");
-                enableDisableViewGroup((currentFragment.View as ViewGroup), false);
+                EnableDisableViewGroup((currentFragment.View as ViewGroup), false);
                 ShowLoading();
 
                 if (textBitmaps.Length != 0)
@@ -151,7 +151,7 @@ namespace DevenirProject
             }
         }
 
-        static void enableDisableViewGroup(ViewGroup viewGroup, bool enabled)
+        static void EnableDisableViewGroup(ViewGroup viewGroup, bool enabled)
         {
             int childCount = viewGroup.ChildCount;
             for (int i = 0; i < childCount; i++)
@@ -160,7 +160,7 @@ namespace DevenirProject
                 view.Enabled = enabled;
                 if (view is ViewGroup)
                 {
-                    enableDisableViewGroup((ViewGroup)view, enabled);
+                    EnableDisableViewGroup((ViewGroup)view, enabled);
                 }
             }
         }

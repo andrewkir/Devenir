@@ -17,7 +17,7 @@ namespace DevenirProject.Views
     public class Point : View
     {
         public int pointRadius;
-        public int ringRadius;
+        private int ringRadius;
 
         public float pointdX;
         public float pointdY; 

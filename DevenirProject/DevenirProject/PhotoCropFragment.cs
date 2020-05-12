@@ -21,8 +21,6 @@ namespace DevenirProject
     {
         event Action<Bitmap[], Bitmap[]> processBitmapsEvent;
 
-        string path;
-
         MultiPointCropView cropView;
         Bitmap srcBitmap;
 
