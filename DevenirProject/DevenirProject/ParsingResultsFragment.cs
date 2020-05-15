@@ -36,7 +36,6 @@ namespace DevenirProject
             tabLayout.SetupWithViewPager(pager, true);
             tabLayout.TabRippleColor = null;
 
-
             var adapter = new PagesAdapter(FragmentManager, Math.Max(textBitmaps.Length, latexBitmaps.Length), textBitmaps, latexBitmaps);
             pager.Adapter = adapter;
             pager.CurrentItem = 0;

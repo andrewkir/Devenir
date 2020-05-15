@@ -98,7 +98,7 @@ namespace DevenirProject
                 }
             });
 
-
+            //Выбор режима activity на весь экран
             if (Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.Kitkat)
             {
                 Window w = Window;
@@ -126,8 +126,7 @@ namespace DevenirProject
                 imageManager.TakePhoto();
             };
 
-
-
+            //Отслеживание смены угла экрана
             orientationListener = new OrientationListener(this, delegate (int angle)
             {
                 if (lastAngle != angle)
@@ -147,14 +146,14 @@ namespace DevenirProject
             });
         }
 
-
-
+        //Восстановление выбранного режима работы вспышки
         protected override void OnSaveInstanceState(Bundle outState)
         {
             outState.PutInt("CURRENT_FLASH_MODE", flashCurrent);
             base.OnSaveInstanceState(outState);
         }
 
+        //Сохранение выбранного режима работы вспышки
         protected override void OnRestoreInstanceState(Bundle savedInstanceState)
         {
             base.OnRestoreInstanceState(savedInstanceState);
@@ -205,6 +204,9 @@ namespace DevenirProject
             base.OnStop();
         }
 
+        /// <summary>
+        /// Обработка запуска превью камеры
+        /// </summary>
         private void StartCamera()
         {
             if (camera != null)
@@ -227,7 +229,7 @@ namespace DevenirProject
 
                 if (camera == null)
                 {
-                    //showAlert("Can not connect to camera.");
+                    //Log.Debug("Can not connect to camera.");
                 }
                 else
                 {
@@ -241,6 +243,10 @@ namespace DevenirProject
                 Log.Debug("Camera activity", e.StackTrace);
             }
         }
+
+        /// <summary>
+        /// Обработка остановки превью камеры
+        /// </summary>
         private void StopCamera()
         {
             if (camera != null)
@@ -257,6 +263,10 @@ namespace DevenirProject
                 }
             }
         }
+
+        /// <summary>
+        /// Обработка сохраненной фотографии
+        /// </summary>
         private void TakePicture()
         {
             if (camera == null) return;
@@ -273,6 +283,9 @@ namespace DevenirProject
             }));
         }
 
+        /// <summary>
+        /// Переключение режима вспышки
+        /// </summary>
         private void ToggleFlash()
         {
             if (CheckSelfPermission(Manifest.Permission.Camera) == Permission.Granted)
@@ -337,6 +350,9 @@ namespace DevenirProject
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
+        /// <summary>
+        /// Обработка смены угла устройства в пространстве
+        /// </summary>
         private class OrientationListener : OrientationEventListener
         {
             int ROTATION_O = 0;

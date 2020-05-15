@@ -37,10 +37,12 @@ namespace DevenirProject
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_mainview);
 
+            //Получение Bitmap из пути к файлу
             string path;
             path = Intent.GetStringExtra("image");
             if (path != null && path != "") sourceBitmap = GetBitmap(path);
 
+            //Инициализация сервисов
             latexService = new LatexApiService(this);
             firebaseImageService = new FirebaseImageService(this);
             loadingAnimation = FindViewById<AVLoadingIndicatorView>(Resource.Id.loadingAnimation);
@@ -105,6 +107,9 @@ namespace DevenirProject
             loadingAnimation.Hide();
         }
 
+        /// <summary>
+        /// Проверка выполненных запросов
+        /// </summary>
         void ProcessedReady()
         {
             if (processedReady == processNums)
@@ -125,6 +130,11 @@ namespace DevenirProject
             }
         }
 
+        /// <summary>
+        /// Старт обработки списка Bitmap
+        /// </summary>
+        /// <param name="textBitmaps">список для текстового распознавания</param>
+        /// <param name="latexBitmaps">список для LaTeX распознавания</param>
         void ProcessBitmaps(Bitmap[] textBitmaps, Bitmap[] latexBitmaps)
         {
             if (textBitmaps.Length == 0 && latexBitmaps.Length == 0)
@@ -165,6 +175,11 @@ namespace DevenirProject
             }
         }
 
+        /// <summary>
+        /// Получение Bitmap по пути до файла
+        /// </summary>
+        /// <param name="path">путь к файлу</param>
+        /// <returns></returns>
         private Bitmap GetBitmap(string path)
         {
             byte[] imageArray = System.IO.File.ReadAllBytes(path);
